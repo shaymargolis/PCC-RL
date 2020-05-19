@@ -50,4 +50,4 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
 
         return obs_n[0], reward_n[0], done_n[0], info_n[0]
 
-register(id='PccNs-v1', entry_point='simulate_network:SingleSenderNetwork')
+register(id='PccNs-v1', entry_point='single_sender_network:SingleSenderNetwork')
