@@ -35,7 +35,7 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
         senders = [
             Sender(
                 random.uniform(0.3, 1.5) * bw,
-                links, 0, self.features,
+                links, 0, features,
                 history_len=history_len
             )
         ]
