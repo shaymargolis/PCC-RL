@@ -24,7 +24,7 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
         """
 
         #  Create two random identical links
-        link1 = Link.generate_random_link(self)
+        link1 = Link.generate_random_link()
         link2 = copy.copy(link1)
 
         links = [link1, link2]

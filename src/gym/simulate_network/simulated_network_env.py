@@ -18,6 +18,22 @@ from src.gym.simulate_network.constants import *
 
 class SimulatedNetworkEnv(gym.Env):
 
+    @staticmethod
+    def get_bw_limits():
+        return (100, 500)
+
+    @staticmethod
+    def get_lat_limits():
+        return (0.05, 0.5)
+
+    @staticmethod
+    def get_queue_limits():
+        return (0, 8)
+
+    @staticmethod
+    def get_loss_limits():
+        return (0.0, 0.05)
+
     def __init__(self,
                  senders: [Sender],
                  networks: [Network],
@@ -28,11 +44,6 @@ class SimulatedNetworkEnv(gym.Env):
                                                  + "send ratio")):
         self.viewer = None
         self.rand = None
-
-        self.min_bw, self.max_bw = (100, 500)
-        self.min_lat, self.max_lat = (0.05, 0.5)
-        self.min_queue, self.max_queue = (0, 8)
-        self.min_loss, self.max_loss = (0.0, 0.05)
         self.history_len = history_len
         print("History length: %d" % history_len)
         self.features = features.split(",")

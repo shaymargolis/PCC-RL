@@ -1,14 +1,21 @@
 import random
 import numpy as np
 
+from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
+
 
 class Link:
     @staticmethod
-    def generate_random_link(network):
-        bw = random.uniform(network.min_bw, network.max_bw)
-        lat = random.uniform(network.min_lat, network.max_lat)
-        queue = 1 + int(np.exp(random.uniform(network.min_queue, network.max_queue)))
-        loss = random.uniform(network.min_loss, network.max_loss)
+    def generate_random_link():
+        min_bw, max_bw = SimulatedNetworkEnv.get_bw_limits()
+        min_lat, max_lat = SimulatedNetworkEnv.get_lat_limits()
+        min_queue, max_queue = SimulatedNetworkEnv.get_queue_limits()
+        min_loss, max_loss = SimulatedNetworkEnv.get_loss_limits()
+
+        bw = random.uniform(min_bw, max_bw)
+        lat = random.uniform(min_lat, max_lat)
+        queue = 1 + int(np.exp(random.uniform(min_queue, max_queue)))
+        loss = random.uniform(min_loss, max_loss)
 
         return Link(bw, lat, queue, loss)
 
