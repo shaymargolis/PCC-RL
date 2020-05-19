@@ -2,6 +2,8 @@ import copy
 import random
 import numpy as np
 
+from gym.envs.registration import register
+
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.network import Network
@@ -47,3 +49,5 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
         obs_n, reward_n, done_n, info_n = super().step([action])
 
         return obs_n[0], reward_n[0], done_n[0], info_n[0]
+
+register(id='PccNs-v1', entry_point='simulate_network:single_sender_network:SingleSenderNetwork')

@@ -147,4 +147,4 @@ class SimulatedNetworkEnv(gym.Env):
             sender.dump_events_to_file(filename_start)
 
 
-register(id='PccNs-v1', entry_point='simulate_network:simulated_network_env:SimulatedNetworkEnv')
+# register(id='PccNs-v1', entry_point='simulate_network:simulated_network_env:SimulatedNetworkEnv')
