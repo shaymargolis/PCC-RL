@@ -22,6 +22,11 @@ from stable_baselines import PPO1
 import os
 import sys
 import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+pparentdir = os.path.dirname(parentdir)
+sys.path.insert(0,pparentdir)
+
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 
