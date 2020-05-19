@@ -32,13 +32,14 @@ class SimulatedNetworkEnv(gym.Env):
         self.features = features.split(",")
         print("Features: %s" % str(self.features))
 
+        self.run_dur = None
+		
         self.networks: [Network] = networks
         self.senders: [Sender] = senders
         self.net: Network = None
         self.next_network_id = 0
         self.create_new_links_and_senders()
 
-        self.run_dur = None
         self.run_period = 0.1
         self.steps_taken = 0
         self.max_steps = MAX_STEPS
@@ -83,7 +84,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         should_stop = False
 
-        obs_n = list()
+        obs_n = [sender.get_obs() for sender in self.senders]
         done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
         info_n = [{}] * len(self.senders)
 

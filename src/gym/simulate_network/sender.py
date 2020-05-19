@@ -206,8 +206,8 @@ class Sender:
         latency = sender_mi.get("avg latency")
         loss = sender_mi.get("loss ratio")
         bw_cutoff = self.path[0].bw * 0.8
-        lat_cutoff = 2.0 * self.path[0].dl * 1.5
-        loss_cutoff = 2.0 * self.path[0].lr * 1.5
+        lat_cutoff = 2.0 * self.path[0].delay * 1.5
+        loss_cutoff = 2.0 * self.path[0].loss_rate * 1.5
         # print("thpt %f, bw %f" % (throughput, bw_cutoff))
         # reward = 0 if (loss > 0.1 or throughput < bw_cutoff or latency > lat_cutoff or loss > loss_cutoff) else 1 #
 

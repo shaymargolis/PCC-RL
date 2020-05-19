@@ -47,7 +47,7 @@ class SenderMonitorInterval():
         else:
             result = SenderMonitorIntervalMetric.eval_by_name(feature, self)
             self.features[feature] = result
-            return result / feature.scale
+            return result
 
     # Convert the observation parts of the monitor interval into a numpy array
     def as_array(self, features):

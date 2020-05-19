@@ -35,19 +35,22 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
         senders = [
             Sender(
                 random.uniform(0.3, 1.5) * bw,
-                links, 0, features,
+                links, 0, features.split(","),
                 history_len=history_len
             )
         ]
 
         #  Init the SimulatedNetwork using the parameters
-        network = Network(links, senders)
+        network = Network(senders, links)
 
-        super().__init__(network, senders, history_len=history_len, features=features)
+        super().__init__(senders, [network], history_len=history_len, features=features)
 
     def step(self, action):
         obs_n, reward_n, done_n, info_n = super().step([action])
 
         return obs_n[0], reward_n[0], done_n[0], info_n[0]
+	
+    def reset(self):
+        return super()._get_all_sender_obs()[0]
 
 register(id='PccNs-v1', entry_point='src.gym.simulate_network.single_sender_network:SingleSenderNetwork')
