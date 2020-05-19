@@ -17,23 +17,6 @@ from src.gym.simulate_network.constants import *
 
 
 class SimulatedNetworkEnv(gym.Env):
-
-    @staticmethod
-    def get_bw_limits():
-        return (100, 500)
-
-    @staticmethod
-    def get_lat_limits():
-        return (0.05, 0.5)
-
-    @staticmethod
-    def get_queue_limits():
-        return (0, 8)
-
-    @staticmethod
-    def get_loss_limits():
-        return (0.0, 0.05)
-
     def __init__(self,
                  senders: [Sender],
                  networks: [Network],
