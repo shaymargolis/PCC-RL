@@ -1,3 +1,4 @@
+import numpy as np
 from src.common import sender_obs, config
 from src.gym.simulate_network.constants import *
 
@@ -176,6 +177,7 @@ class Sender:
         event["Name"] = "Step"
         event["Time"] = steps_taken
         event["Reward"] = reward
+        event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
         # event["Target Rate"] = sender_mi.target_rate
         event["Send Rate"] = sender_mi.get("send rate")
         event["Throughput"] = sender_mi.get("recv rate")

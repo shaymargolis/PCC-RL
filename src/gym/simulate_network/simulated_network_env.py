@@ -65,8 +65,6 @@ class SimulatedNetworkEnv(gym.Env):
                                             np.tile(single_obs_max_vec, self.history_len),
                                             dtype=np.float32)
 
-        self.reward_sum = 0.0
-        self.reward_ewma = 0.0
         self.episodes_run = -1
 
     def seed(self, seed=None):
@@ -104,17 +102,15 @@ class SimulatedNetworkEnv(gym.Env):
         return obs_n, reward_n, done_n, info_n
 
     def print_debug(self):
-        print("---Link Debug---")
-        for link in self.links:
-            link.print_debug()
         print("---Sender Debug---")
         for sender in self.senders:
             sender.print_debug()
 
-    def create_new_links_and_senders(self):
-        for link in self.links:
-            link.reset()
+            print("*Link Debug*")
+            for link in sender.path:
+                link.print_debug()
 
+    def create_new_links_and_senders(self):
         self.net = self.networks[self.next_network_id]
         self.net.reset()
 
@@ -122,9 +118,7 @@ class SimulatedNetworkEnv(gym.Env):
         if self.next_network_id >= len(self.networks):
             self.next_network_id = 0
 
-        bw = np.min([link.bw for link in self.net.links])
         lat = np.max([link.delay for link in self.net.links])
-
         self.run_dur = 3 * lat
 
     def reset(self):
