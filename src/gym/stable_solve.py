@@ -35,10 +35,13 @@ print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)
 
 for i in range(0, 6):
-    model.save("tmp")
-    del model  # delete trained model to demonstrate loading
-
-    # Load the trained agent
-    model = PPO1.load("dqn_lunar")
-
     model.learn(total_timesteps=(1600 * 410))
+    model.save("./pcc_model_%d.zip" % i)
+
+##
+#   Save the model to the location specified below.
+##
+default_export_dir = "/tmp/pcc_saved_models/model_A/"
+export_dir = arg_or_default("--model-dir", default=default_export_dir)
+
+model.save(export_dir)
