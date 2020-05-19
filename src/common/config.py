@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from common.simple_arg_parse import arg_or_default
+from src.common.simple_arg_parse import arg_or_default
 
 DELTA_SCALE = arg_or_default("--delta-scale", 0.025)
