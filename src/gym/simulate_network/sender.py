@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from src.common import sender_obs, config
 from src.gym.simulate_network.constants import *
@@ -159,6 +160,9 @@ class Sender:
         print("[Sender %d] Reward: %0.2f, Ewma Reward: %0.2f" % (self.id, self.reward_sum, self.reward_ewma))
         self.reward_sum = 0.0
 
+    def dump_events_to_file(self, filename):
+        with open(filename + "_sender_%d.json" % self.id, 'w') as f:
+            json.dump(self.event_record, f, indent=4)
 
     def add_event(self, steps_taken, run_dur):
         """
@@ -195,7 +199,6 @@ class Sender:
 
         self.reward_sum += reward
         return run_dur
-
 
     def get_reward(self):
         sender_mi = self.get_run_data()

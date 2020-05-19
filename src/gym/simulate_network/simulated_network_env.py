@@ -128,9 +128,8 @@ class SimulatedNetworkEnv(gym.Env):
 
         self.episodes_run += 1
         if self.episodes_run > 0 and self.episodes_run % 100 == 0:
-            self.dump_events_to_file("pcc_env_log_run_%d.json" % self.episodes_run)
+            self.dump_events_to_file("pcc_env_log_run_%d" % self.episodes_run)
 
-        self.event_record = {"Events": []}
         self.net.run_for_dur(self.run_dur)
         self.net.run_for_dur(self.run_dur)
         return self._get_all_sender_obs()
@@ -143,9 +142,9 @@ class SimulatedNetworkEnv(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-    def dump_events_to_file(self, filename):
-        with open(filename, 'w') as f:
-            json.dump(self.event_record, f, indent=4)
+    def dump_events_to_file(self, filename_start):
+        for sender in self.senders:
+            sender.dump_events_to_file(filename_start)
 
 
 register(id='PccNs-v1', entry_point='simulate_network:simulated_network_env:SimulatedNetworkEnv')
