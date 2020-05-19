@@ -4,6 +4,14 @@ from src.gym.simulate_network.constants import *
 
 class Sender:
     def __init__(self, rate, path, dest, features, cwnd=25, history_len=10):
+        """
+        :param rate: Rate in MBps
+        :param path:
+        :param dest:
+        :param features:
+        :param cwnd:
+        :param history_len:
+        """
         self.id = Sender._get_next_id()
         self.starting_rate = rate
         self.rate = rate
@@ -21,6 +29,11 @@ class Sender:
         self.features = features
         self.history = sender_obs.SenderHistory(self.history_len,
                                                 self.features, self.id)
+
+        self.event_record = {"Events": []}
+        self.reward_sum = 0
+        self.reward_ewma = 0
+
         self.cwnd = cwnd
 
     _next_id = 1
@@ -139,6 +152,48 @@ class Sender:
         self.reset_obs()
         self.history = sender_obs.SenderHistory(self.history_len,
                                                 self.features, self.id)
+
+        self.reward_ewma *= 0.99
+        self.reward_ewma += 0.01 * self.reward_sum
+        print("[Sender %d] Reward: %0.2f, Ewma Reward: %0.2f" % (self.id, self.reward_sum, self.reward_ewma))
+        self.reward_sum = 0.0
+
+
+    def add_event(self, steps_taken, run_dur):
+        """
+        Adds step event and returns the new run_dur
+        :param steps_taken: The number of steps taken until
+        this point.
+        :param run_dur: The original run_dur
+        :return: New run dur
+        """
+
+        reward = self.get_reward()
+
+        sender_mi = self.get_run_data()
+
+        event = {}
+        event["Name"] = "Step"
+        event["Time"] = steps_taken
+        event["Reward"] = reward
+        # event["Target Rate"] = sender_mi.target_rate
+        event["Send Rate"] = sender_mi.get("send rate")
+        event["Throughput"] = sender_mi.get("recv rate")
+        event["Latency"] = sender_mi.get("avg latency")
+        event["Loss Rate"] = sender_mi.get("loss ratio")
+        event["Latency Inflation"] = sender_mi.get("sent latency inflation")
+        event["Latency Ratio"] = sender_mi.get("latency ratio")
+        event["Send Ratio"] = sender_mi.get("send ratio")
+        # event["Cwnd"] = sender_mi.cwnd
+        # event["Cwnd Used"] = sender_mi.cwnd_used
+        self.event_record["Events"].append(event)
+        if event["Latency"] > 0.0:
+            run_dur = 0.5 * sender_mi.get("avg latency")
+        # print("Sender obs: %s" % sender_obs)
+
+        self.reward_sum += reward
+        return run_dur
+
 
     def get_reward(self):
         sender_mi = self.get_run_data()

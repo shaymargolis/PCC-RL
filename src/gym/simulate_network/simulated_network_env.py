@@ -19,6 +19,8 @@ from src.gym.simulate_network.constants import *
 class SimulatedNetworkEnv(gym.Env):
 
     def __init__(self,
+                 senders: [Sender],
+                 networks: [Network],
                  history_len=arg_or_default("--history-len", default=10),
                  features=arg_or_default("--input-features",
                                          default="sent latency inflation,"
@@ -36,10 +38,12 @@ class SimulatedNetworkEnv(gym.Env):
         self.features = features.split(",")
         print("Features: %s" % str(self.features))
 
-        self.links = None
-        self.senders = None
+        self.networks: [Network] = networks
+        self.senders: [Sender] = senders
+        self.net: Network = None
+        self.next_network_id = 0
         self.create_new_links_and_senders()
-        self.net = Network(self.senders, self.links)
+
         self.run_dur = None
         self.run_period = 0.1
         self.steps_taken = 0
@@ -63,8 +67,6 @@ class SimulatedNetworkEnv(gym.Env):
 
         self.reward_sum = 0.0
         self.reward_ewma = 0.0
-
-        self.event_record = {"Events": []}
         self.episodes_run = -1
 
     def seed(self, seed=None):
@@ -72,10 +74,7 @@ class SimulatedNetworkEnv(gym.Env):
         return [seed]
 
     def _get_all_sender_obs(self):
-        sender_obs = self.senders[0].get_obs()
-        sender_obs = np.array(sender_obs).reshape(-1, )
-        # print(sender_obs)
-        return sender_obs
+        return [sender.get_obs() for sender in self.senders]
 
     def step(self, actions: list):
         # print("Actions: %s" % str(actions))
@@ -85,39 +84,24 @@ class SimulatedNetworkEnv(gym.Env):
             action = actions[i]
             self.senders[i].apply_rate_delta(action)
             if USE_CWND:
-                self.senders[i].apply_cwnd_delta(action[i])
+                self.senders[i].apply_cwnd_delta(action)
 
         # print("Running for %fs" % self.run_dur)
-        reward = self.net.run_for_dur(self.run_dur)
-        for sender in self.senders:
-            sender.record_run()
-
-        self.steps_taken += 1
-        sender_obs = self._get_all_sender_obs()
-        sender_mi = self.senders[0].get_run_data()
-        event = {}
-        event["Name"] = "Step"
-        event["Time"] = self.steps_taken
-        event["Reward"] = reward
-        # event["Target Rate"] = sender_mi.target_rate
-        event["Send Rate"] = sender_mi.get("send rate")
-        event["Throughput"] = sender_mi.get("recv rate")
-        event["Latency"] = sender_mi.get("avg latency")
-        event["Loss Rate"] = sender_mi.get("loss ratio")
-        event["Latency Inflation"] = sender_mi.get("sent latency inflation")
-        event["Latency Ratio"] = sender_mi.get("latency ratio")
-        event["Send Ratio"] = sender_mi.get("send ratio")
-        # event["Cwnd"] = sender_mi.cwnd
-        # event["Cwnd Used"] = sender_mi.cwnd_used
-        self.event_record["Events"].append(event)
-        if event["Latency"] > 0.0:
-            self.run_dur = 0.5 * sender_mi.get("avg latency")
-        # print("Sender obs: %s" % sender_obs)
+        self.net.run_for_dur(self.run_dur)
 
         should_stop = False
 
-        self.reward_sum += reward
-        return sender_obs, reward, (self.steps_taken >= self.max_steps or should_stop), {}
+        obs_n = list()
+        done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
+        info_n = [{}] * len(self.senders)
+
+        reward_n = [sender.get_reward() for sender in self.senders]
+
+        self.steps_taken += 1
+
+        self.run_dur = np.max([sender.add_event(self.steps_taken, self.run_dur) for sender in self.senders])
+
+        return obs_n, reward_n, done_n, info_n
 
     def print_debug(self):
         print("---Link Debug---")
@@ -128,21 +112,18 @@ class SimulatedNetworkEnv(gym.Env):
             sender.print_debug()
 
     def create_new_links_and_senders(self):
-        link1 = Link.generate_random_link(self)
-        link2 = copy.copy(link1)
+        for link in self.links:
+            link.reset()
 
-        self.links = [link1, link2]
+        self.net = self.networks[self.next_network_id]
+        self.net.reset()
 
-        bw = np.min([link.bw for link in self.links])
-        lat = np.max([link.delay for link in self.links])
+        self.next_network_id += 1
+        if self.next_network_id >= len(self.networks):
+            self.next_network_id = 0
 
-        self.senders = [
-            Sender(
-                random.uniform(0.3, 1.5) * bw,
-                [self.links[0], self.links[1]], 0, self.features,
-                               history_len=self.history_len
-            )
-        ]
+        bw = np.min([link.bw for link in self.net.links])
+        lat = np.max([link.delay for link in self.net.links])
 
         self.run_dur = 3 * lat
 
@@ -150,17 +131,14 @@ class SimulatedNetworkEnv(gym.Env):
         self.steps_taken = 0
         self.net.reset()
         self.create_new_links_and_senders()
-        self.net = Network(self.senders, self.links)
+
         self.episodes_run += 1
         if self.episodes_run > 0 and self.episodes_run % 100 == 0:
             self.dump_events_to_file("pcc_env_log_run_%d.json" % self.episodes_run)
+
         self.event_record = {"Events": []}
         self.net.run_for_dur(self.run_dur)
         self.net.run_for_dur(self.run_dur)
-        self.reward_ewma *= 0.99
-        self.reward_ewma += 0.01 * self.reward_sum
-        print("Reward: %0.2f, Ewma Reward: %0.2f" % (self.reward_sum, self.reward_ewma))
-        self.reward_sum = 0.0
         return self._get_all_sender_obs()
 
     def render(self, mode='human'):

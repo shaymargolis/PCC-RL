@@ -86,3 +86,6 @@ class Network():
 
             if push_new_event:
                 heapq.heappush(self.q, (new_event_time, sender, new_event_type, new_next_hop, new_latency, new_dropped))
+
+        for sender in self.senders:
+            sender.record_run()
