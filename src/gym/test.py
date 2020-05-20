@@ -78,7 +78,6 @@ plt.legend()
 
 obs = env.reset()
 for i in range(1600 * 410):
-    print("AAA", env.run_dur)
     action, _states = model.predict(obs[0])
     obs, rewards, dones, info = env.step(action)
 
@@ -88,10 +87,12 @@ for i in range(1600 * 410):
     plt.plot(event["Time"], event["Optimal"], "b--", label="Optimal")
     plt.draw()
 
-    print("BBB", event["Optimal"])
-
     if i % 100 == 0:
         plt.pause(0.01)
+
+    if i > 0 and i % 2500 == 0:
+        env.reset()
+
 
     env.render()
 
