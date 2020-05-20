@@ -44,7 +44,8 @@ features = "sent latency inflation," + "latency ratio," + "send ratio"
 def get_network(senders: [Sender], bw: int):
     #  Create two random identical links
     link1 = Link.generate_random_link()
-    link2 = Link(link1.bw, link1.delay, link1.queue_delay, link1.loss_rate)
+    link1.bw = bw
+    link2 = Link(bw, link1.delay, link1.queue_delay, link1.loss_rate)
 
     links = [link1, link2]
 
