@@ -1,2 +1,3 @@
 tensorflow
 stable_baselines
+mpi4py
