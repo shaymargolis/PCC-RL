@@ -122,6 +122,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         for sender in self.senders:
             sender.path = self.net.links
+            sender.register_network(self.net)
 
         self.net.reset()
 
