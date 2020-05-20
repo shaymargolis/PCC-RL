@@ -41,7 +41,7 @@ from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: 20):
+def get_network(senders: [Sender], bw: int):
     #  Create two random identical links
     link1 = Link.generate_random_link()
     link2 = Link(link1.bw, link1.delay, link1.queue_delay, link1.loss_rate)
@@ -73,17 +73,25 @@ env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=f
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
+plt.figure()
+plt.legend()
 
 obs = env.reset()
 for i in range(1600 * 410):
-    action, _states = model.predict(obs)
+    print("AAA", env.run_dur)
+    action, _states = model.predict(obs[0])
     obs, rewards, dones, info = env.step(action)
 
-    event = info["Events"][-1]
+    event = info[0]["Events"][-1]
 
-    plt.plot(event["Time"], event["Throughput"], "r.")
-    plt.plot(event["Time"], event["Optimal"], "b--")
+    plt.plot(event["Time"], event["Throughput"], "r.", label="Throughput")
+    plt.plot(event["Time"], event["Optimal"], "b--", label="Optimal")
     plt.draw()
+
+    print("BBB", event["Optimal"])
+
+    if i % 100 == 0:
+        plt.pause(0.01)
 
     env.render()
 
