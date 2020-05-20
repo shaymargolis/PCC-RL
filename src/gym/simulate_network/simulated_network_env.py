@@ -31,14 +31,14 @@ class SimulatedNetworkEnv(gym.Env):
         print("History length: %d" % history_len)
         self.features = features.split(",")
         print("Features: %s" % str(self.features))
-
-        self.run_dur = None
 		
         self.networks: [Network] = networks
         self.senders: [Sender] = senders
         self.net: Network = None
         self.next_network_id = 0
         self.create_new_links_and_senders()
+		
+        self.run_dur = None
 
         self.run_period = 0.1
         self.steps_taken = 0
@@ -67,11 +67,16 @@ class SimulatedNetworkEnv(gym.Env):
         return [seed]
 
     def _get_all_sender_obs(self):
-        return [sender.get_obs() for sender in self.senders]
+        def get_single_sender_obs(sender):
+            sender_obs = sender.get_obs()
+            sender_obs = np.array(sender_obs).reshape(-1,)
+            return sender_obs
+
+        sender_obs = [get_single_sender_obs(sen) for sen in self.senders]
+        return sender_obs
 
     def step(self, actions: list):
-        # print("Actions: %s" % str(actions))
-        # print(actions)
+        # print(self.run_dur)
         for i in range(len(actions)):  # len(actions)):
             # print("Updating rate for sender %d" % i)
             action = actions[i]
@@ -81,10 +86,14 @@ class SimulatedNetworkEnv(gym.Env):
 
         # print("Running for %fs" % self.run_dur)
         self.net.run_for_dur(self.run_dur)
+		
+        for sender in self.senders:
+            sender.record_run()
 
+		
         should_stop = False
 
-        obs_n = [sender.get_obs() for sender in self.senders]
+        obs_n = self._get_all_sender_obs()
         done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
         info_n = [{}] * len(self.senders)
 
@@ -92,7 +101,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         self.steps_taken += 1
 
-        self.run_dur = np.max([sender.add_event(self.steps_taken, self.run_dur) for sender in self.senders])
+        self.run_dur = np.min([sender.add_event(self.steps_taken, self.run_dur) for sender in self.senders])
 
         return obs_n, reward_n, done_n, info_n
 
@@ -118,7 +127,6 @@ class SimulatedNetworkEnv(gym.Env):
 
     def reset(self):
         self.steps_taken = 0
-        self.net.reset()
         self.create_new_links_and_senders()
 
         self.episodes_run += 1

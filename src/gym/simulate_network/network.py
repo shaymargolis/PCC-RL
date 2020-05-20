@@ -36,6 +36,7 @@ class Network():
 
         while self.cur_time < end_time:
             event_time, sender, event_type, next_hop, cur_latency, dropped = heapq.heappop(self.q)
+                        
             # print("Got event %s, to link %d, latency %f at time %f" % (event_type, next_hop, cur_latency, event_time))
             self.cur_time = event_time
             new_event_time = event_time
@@ -86,6 +87,3 @@ class Network():
 
             if push_new_event:
                 heapq.heappush(self.q, (new_event_time, sender, new_event_type, new_next_hop, new_latency, new_dropped))
-
-        for sender in self.senders:
-            sender.record_run()

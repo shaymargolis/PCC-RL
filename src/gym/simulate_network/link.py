@@ -42,6 +42,8 @@ class Link:
         self.max_queue_delay = queue_size / self.bw
 
     def get_cur_queue_delay(self, event_time):
+        # print("GET_QUEUE queue_delay", self.queue_delay)
+        # print("GET_QUEUE update_time", self.queue_delay_update_time)
         return max(0.0, self.queue_delay - (event_time - self.queue_delay_update_time))
 
     def get_cur_latency(self, event_time):

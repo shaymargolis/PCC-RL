@@ -35,7 +35,7 @@ class Sender:
         self.event_record = {"Events": []}
         self.reward_sum = 0
         self.reward_ewma = 0
-
+        
         self.cwnd = cwnd
 
     _next_id = 1
@@ -46,7 +46,7 @@ class Sender:
         Sender._next_id += 1
         return result
 
-    def apply_rate_delta(self, delta):
+    def apply_rate_delta(self, delta):    
         delta *= config.DELTA_SCALE
         # print("Applying delta %f" % delta)
         if delta >= 0.0:
@@ -111,12 +111,12 @@ class Sender:
 
     def get_run_data(self):
         obs_end_time = self.net.get_cur_time()
-
+		
         # obs_dur = obs_end_time - self.obs_start_time
         # print("Got %d acks in %f seconds" % (self.acked, obs_dur))
         # print("Sent %d packets in %f seconds" % (self.sent, obs_dur))
         # print("self.rate = %f" % self.rate)
-
+        
         return sender_obs.SenderMonitorInterval(
             self.id,
             bytes_sent=self.sent * BYTES_PER_PACKET,
@@ -181,7 +181,7 @@ class Sender:
         event["Name"] = "Step"
         event["Time"] = steps_taken
         event["Reward"] = reward
-        event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
+        # event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
         # event["Target Rate"] = sender_mi.target_rate
         event["Send Rate"] = sender_mi.get("send rate")
         event["Throughput"] = sender_mi.get("recv rate")

@@ -110,7 +110,7 @@ def get_max_obs_vector(feature_names):
 def _mi_metric_recv_rate(mi):
     dur = mi.get("recv dur")
     if dur > 0.0:
-        return (mi.bytes_acked - mi.packet_size) / dur
+        return 8.0 * (mi.bytes_acked - mi.packet_size) / dur
     return 0.0
 
 def _mi_metric_recv_dur(mi):
@@ -124,7 +124,7 @@ def _mi_metric_avg_latency(mi):
 def _mi_metric_send_rate(mi):
     dur = mi.get("send dur")
     if dur > 0.0:
-        return mi.bytes_sent / dur
+        return 8.0 * mi.bytes_sent / dur
     return 0.0
 
 def _mi_metric_send_dur(mi):
@@ -191,8 +191,8 @@ def _mi_metric_latency_ratio(mi):
     return 1.0
 
 SENDER_MI_METRICS = [
-    SenderMonitorIntervalMetric("send rate", _mi_metric_send_rate, 0.0, 1e9, 1e6),
-    SenderMonitorIntervalMetric("recv rate", _mi_metric_recv_rate, 0.0, 1e9, 1e6),
+    SenderMonitorIntervalMetric("send rate", _mi_metric_send_rate, 0.0, 1e9, 1e7),
+    SenderMonitorIntervalMetric("recv rate", _mi_metric_recv_rate, 0.0, 1e9, 1e7),
     SenderMonitorIntervalMetric("recv dur", _mi_metric_recv_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("send dur", _mi_metric_send_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("avg latency", _mi_metric_avg_latency, 0.0, 100.0),
@@ -204,5 +204,4 @@ SENDER_MI_METRICS = [
     SenderMonitorIntervalMetric("latency ratio", _mi_metric_latency_ratio, 1.0, 10000.0),
     SenderMonitorIntervalMetric("send ratio", _mi_metric_send_ratio, 0.0, 1000.0)
 ]
-
 
