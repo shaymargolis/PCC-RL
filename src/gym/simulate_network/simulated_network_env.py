@@ -116,6 +116,10 @@ class SimulatedNetworkEnv(gym.Env):
 
     def create_new_links_and_senders(self):
         self.net = self.networks[self.next_network_id]
+
+        for sender in self.senders:
+            sender.path = self.net.links
+
         self.net.reset()
 
         self.next_network_id += 1
