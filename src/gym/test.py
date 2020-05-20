@@ -52,7 +52,7 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [20, 30, 20, 10, 30, 20]
+bws = [20, 20, 30, 20, 10, 30, 20]
 
 senders = [
     Sender(
@@ -66,8 +66,8 @@ import matplotlib.pyplot as plt
 
 networks = [get_network(senders, bw) for bw in bws]
 
-model = PPO1.load("./pcc_model_5")
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+model = PPO1.load("./pcc_model_5", env)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -85,7 +85,7 @@ for i in range(1600 * 410):
     event = info[0]["Events"][-1]
 
     plt.plot(event["Time"], event["Throughput"], "r.", label="Throughput")
-    plt.plot(event["Time"], event["Optimal"], "b--", label="Optimal")
+    plt.plot(event["Time"], 8*event["Optimal"], "b--", label="Optimal")
     plt.draw()
 
     if i % 500 == 0:
