@@ -87,7 +87,7 @@ for i in range(1600 * 410):
     plt.plot(event["Time"], event["Optimal"], "b--", label="Optimal")
     plt.draw()
 
-    if i % 100 == 0:
+    if i % 500 == 0:
         plt.pause(0.01)
 
     if i > 0 and i % 2500 == 0:
