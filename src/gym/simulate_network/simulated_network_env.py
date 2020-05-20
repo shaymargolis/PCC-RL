@@ -95,7 +95,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         obs_n = self._get_all_sender_obs()
         done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
-        info_n = [{}] * len(self.senders)
+        info_n = [sender.event_record for sender in self.senders]
 
         reward_n = [sender.get_reward() for sender in self.senders]
 
@@ -116,6 +116,7 @@ class SimulatedNetworkEnv(gym.Env):
 
     def create_new_links_and_senders(self):
         self.net = self.networks[self.next_network_id]
+        self.net.senders = self.senders
 
         for sender in self.senders:
             sender.path = self.net.links
