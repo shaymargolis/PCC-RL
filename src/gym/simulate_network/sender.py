@@ -148,7 +148,7 @@ class Sender:
 
     def reset(self):
         # print("Resetting sender!")
-        self.rate = self.starting_rate
+        # self.rate = self.starting_rate
         self.bytes_in_flight = 0
         self.min_latency = None
         self.reset_obs()

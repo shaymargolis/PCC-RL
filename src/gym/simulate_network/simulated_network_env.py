@@ -42,6 +42,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         self.run_period = 0.1
         self.steps_taken = 0
+        self.total_steps_taken = 0
         self.max_steps = MAX_STEPS
         self.debug_thpt_changes = False
         self.last_thpt = None
@@ -100,8 +101,9 @@ class SimulatedNetworkEnv(gym.Env):
         reward_n = [sender.get_reward() for sender in self.senders]
 
         self.steps_taken += 1
+        self.total_steps_taken += 1
 
-        self.run_dur = np.min([sender.add_event(self.steps_taken, self.run_dur) for sender in self.senders])
+        self.run_dur = np.min([sender.add_event(self.total_steps_taken, self.run_dur) for sender in self.senders])
 
         return obs_n, reward_n, done_n, info_n
 
