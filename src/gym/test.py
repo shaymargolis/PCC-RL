@@ -23,14 +23,14 @@ import os
 import sys
 import inspect
 
-from src.gym.simulate_network.link import Link
-from src.gym.simulate_network.network import Network
-from src.gym.simulate_network.sender import Sender
-
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
+
+from src.gym.simulate_network.link import Link
+from src.gym.simulate_network.network import Network
+from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
