@@ -32,21 +32,21 @@ from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 
 training_sess = None
 
-env = gym.make('PccNs-v1')
 #env = gym.make('CartPole-v0')
 
 gamma = arg_or_default("--gamma", default=0.99)
+output = arg_or_default("--output", default=".")
+
+env = gym.make('PccNs-v1', output=output)
+
 print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)
 
-for i in range(0, 6):
+for i in range(0, 20):
     model.learn(total_timesteps=(1600 * 410))
-    model.save("./pcc_model_%d.zip" % i)
+    model.save(output + "/pcc_model_%d.zip" % i)
 
 ##
 #   Save the model to the location specified below.
 ##
-default_export_dir = "/tmp/pcc_saved_models/model_A/"
-export_dir = arg_or_default("--model-dir", default=default_export_dir)
-
-model.save(export_dir)
+model.save(output + "/saved_model.zip")

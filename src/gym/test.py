@@ -84,17 +84,18 @@ for i in range(1600 * 410):
 
     event = info[0]["Events"][-1]
 
-    if i > 0 and i % 500 == 0:
-        times = [event["Time"] for event in info[0]["Events"][-500:]]
+    if i > 0 and i % 400 == 0:
+        obs = env.reset()
+        times = [event["Time"] for event in info[0]["Events"][-501:]]
         throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
-        optim = [event["Optimal"] for event in info[0]["Events"][-500:]]
-        plt.plot(times, throu, "r.", label="Throughput")
+        optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
+        plt.plot(times[:500], throu, "r.", label="Throughput")
         plt.plot(times, optim, "b--", label="Optimal")
         plt.draw()
         plt.pause(0.01)
 
     if i > 0 and i % 2500 == 0:
-        env.reset()
+        obs = env.reset(True)
 
 
     env.render()

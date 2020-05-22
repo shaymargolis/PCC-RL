@@ -3,4 +3,4 @@ source thesis_sed/bin/activate
 
 cd src/gym
 
-python stable_solve.py --model-dir="./pcc_saved_models/model_A/"
+python stable_solve.py --output="/cs/labs/schapiram/shaymar/1"

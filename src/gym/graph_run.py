@@ -29,7 +29,7 @@ with open(filename) as f:
 
 time_data = [float(event["Time"]) for event in data["Events"][1:]]
 rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
-optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
+optimal_data = [8*float(event["Optimal"]) for event in data["Events"][1:]]
 send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 thpt_data = [float(event["Throughput"]) for event in data["Events"][1:]]
 latency_data = [float(event["Latency"]) for event in data["Events"][1:]]
@@ -49,8 +49,9 @@ send_axis.plot(time_data, send_data)
 send_axis.set_ylabel("Send Rate")
 
 thpt_axis.plot(time_data, optimal_data, "b--", label="optimal")
-thpt_axis.plot(time_data, thpt_data, "r-", "actual")
+thpt_axis.plot(time_data, thpt_data, "r.", label="actual")
 thpt_axis.set_ylabel("Throughput")
+thpt_axis.legend()
 
 latency_axis.plot(time_data, latency_data)
 latency_axis.set_ylabel("Latency")
@@ -61,3 +62,4 @@ loss_axis.set_xlabel("Monitor Interval")
 
 fig.suptitle("Summary Graph for %s" % sys.argv[1])
 fig.savefig("env_graph.pdf")
+plt.show()

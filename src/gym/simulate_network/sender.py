@@ -161,8 +161,10 @@ class Sender:
         self.reward_sum = 0.0
 
     def dump_events_to_file(self, filename):
+        shallow_record = {"Events": self.event_record["Events"][-500:]}
+    
         with open(filename + "_sender_%d.json" % self.id, 'w') as f:
-            json.dump(self.event_record, f, indent=4)
+            json.dump(shallow_record, f, indent=4)
 
     def add_event(self, steps_taken, run_dur):
         """
