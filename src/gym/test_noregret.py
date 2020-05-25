@@ -14,15 +14,10 @@
 import random
 
 import gym
-import tensorflow as tf
-
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common.policies import FeedForwardPolicy
-from stable_baselines import PPO1
 import os
 import sys
 import inspect
-
+import numpy as np
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
@@ -36,7 +31,7 @@ from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
 import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
-from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
+from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
@@ -52,24 +47,9 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200, 200, 300, 200, 100, 300, 200]
+bws = [200, 300, 200, 400, 100, 300, 600]
 
 senders = [
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    ),
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    ),
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    ),
     Sender(
         random.uniform(0.3, 1.5) * bws[0],
         None, 0, features.split(","),
@@ -82,57 +62,41 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = PPO1.load("./pcc_model_23", env)
-model2 = PPO1.load("./pcc_model_23", env)
-model3 = PPO1.load("./pcc_model_23", env)
+model = NoRegretAgent(actions_limits=(40, 1000))
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
-fig, axes = plt.subplots(4, figsize=(10, 12))
-sender1_axis = axes[0]
-sender2_axis = axes[1]
-sender3_axis = axes[2]
-sender4_axis = axes[3]
-
-
-def plot_axis(axis, events):
-    times = [event["Time"] for event in events[-501:]]
-    throu = [event["Throughput"] for event in events[-500:]]
-    optim = [8*event["Optimal"] for event in events[-501:]]
-    axis.plot(times[:500], throu, "r-", label="Throughput")
-    axis.plot(times, optim, "b--", label="Optimal")
+plt.figure()
+plt.legend()
 
 obs = env.reset()
+rewards = [0]
 for i in range(1600 * 410):
-    action, _states = model.predict(obs[0])
-    action2, _states = model2.predict(obs[1])
-    action3, _states = model3.predict(obs[2])
-    action4, _states = model3.predict(obs[3])
-    obs, rewards, dones, info = env.step(action + action2 + action3 + action4)
+    #env.senders[0].set_rate(200)
+    action = model.predict(rewards[0])
+    env.senders[0].set_rate(action)
+    print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
+    obs, rewards, dones, info = env.step([0])
+
+    event = info[0]["Events"][-1]
 
     if i > 0 and i % 400 == 0:
         obs = env.reset()
-        
-        plot_axis(sender1_axis, info[0]["Events"])
-        plot_axis(sender2_axis, info[1]["Events"])
-        plot_axis(sender3_axis, info[2]["Events"])
-        plot_axis(sender4_axis, info[3]["Events"])
+        times = [event["Time"] for event in info[0]["Events"][-501:]]
+        send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
+        throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
+        optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
+        plt.plot(times[:500], throu, "g.", label="Throughput")
+        plt.plot(times[:500], send, "r.", label="Send rate")
+        plt.plot(times, optim, "b--", label="Optimal")
         plt.draw()
         plt.pause(0.01)
 
-    if i > 0 and i % 2500 == 0:
+    if i > 0 and i % 5000 == 0:
         obs = env.reset(True)
 
 
     env.render()
-
-##
-#   Save the model to the location specified below.
-##
-default_export_dir = "/tmp/pcc_saved_models/model_A/"
-export_dir = arg_or_default("--model-dir", default=default_export_dir)
-
-model.save(export_dir)
