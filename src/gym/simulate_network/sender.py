@@ -230,3 +230,8 @@ class Sender:
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
         return reward * REWARD_SCALE
 
+    def __le__(self, other):
+        return self.id <= other.id
+
+    def __lt__(self, other):
+        return self.id < other.id
