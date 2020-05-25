@@ -3,4 +3,4 @@ source thesis_sed/bin/activate
 
 cd src/gym
 
-python stable_solve.py --output="/cs/labs/schapiram/shaymar/1"
+python stable_restart.py --output="/cs/labs/schapiram/shaymar/2"
