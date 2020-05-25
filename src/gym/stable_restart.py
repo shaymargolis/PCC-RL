@@ -55,7 +55,7 @@ for file in os.listdir(output):
 if start_point != 0:
     model = PPO1.load(output + "/pcc_model_%d.zip" % (start_point-1), env)
     
-for i in range(start_point, 20):
+for i in range(start_point, 40):
     model.learn(total_timesteps=(1600 * 410))
     model.save(output + "/pcc_model_%d.zip" % i)
 

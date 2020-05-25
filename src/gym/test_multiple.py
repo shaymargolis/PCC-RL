@@ -64,6 +64,16 @@ senders = [
         random.uniform(0.3, 1.5) * bws[0],
         None, 0, features.split(","),
         history_len=history_len
+    ),
+    Sender(
+        random.uniform(0.3, 1.5) * bws[0],
+        None, 0, features.split(","),
+        history_len=history_len
+    ),
+    Sender(
+        random.uniform(0.3, 1.5) * bws[0],
+        None, 0, features.split(","),
+        history_len=history_len
     )
 ]
 
@@ -74,6 +84,7 @@ networks = [get_network(senders, bw) for bw in bws]
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
 model = PPO1.load("./pcc_model_23", env)
 model2 = PPO1.load("./pcc_model_23", env)
+model3 = PPO1.load("./pcc_model_23", env)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -81,23 +92,36 @@ model2 = PPO1.load("./pcc_model_23", env)
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 plt.figure()
-plt.legend()
+
+fig, axes = plt.subplots(4, figsize=(10, 12))
+sender1_axis = axes[0]
+sender2_axis = axes[1]
+sender3_axis = axes[2]
+sender4_axis = axes[3]
+
+
+def plot_axis(axis, events):
+    times = [event["Time"] for event in events[-501:]]
+    throu = [event["Throughput"] for event in events[-500:]]
+    optim = [8*event["Optimal"] for event in events[-501:]]
+    axis.plot(times[:500], throu, "r-", label="Throughput")
+    axis.plot(times, optim, "b--", label="Optimal")
 
 obs = env.reset()
 for i in range(1600 * 410):
     action, _states = model.predict(obs[0])
     action2, _states = model2.predict(obs[1])
-    obs, rewards, dones, info = env.step(action + action2)
-
-    event = info[0]["Events"][-1]
+    action3, _states = model3.predict(obs[2])
+    action4, _states = model3.predict(obs[3])
+    obs, rewards, dones, info = env.step(action + action2 + action3 + action4)
 
     if i > 0 and i % 400 == 0:
         obs = env.reset()
-        times = [event["Time"] for event in info[0]["Events"][-501:]]
-        throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
-        optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
-        plt.plot(times[:500], throu, "r-", label="Throughput")
-        plt.plot(times, optim, "b--", label="Optimal")
+        
+        plot_axis(sender1_axis, info[0]["Events"])
+        plot_axis(sender2_axis, info[1]["Events"])
+        plot_axis(sender3_axis, info[2]["Events"])
+        plot_axis(sender4_axis, info[3]["Events"])
         plt.draw()
         plt.pause(0.01)
 
