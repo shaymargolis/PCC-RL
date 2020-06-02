@@ -35,7 +35,8 @@ class Sender:
         self.event_record = {"Events": []}
         self.reward_sum = 0
         self.reward_ewma = 0
-        
+        self.last_latency = [0]
+
         self.cwnd = cwnd
 
     _next_id = 1
@@ -181,6 +182,7 @@ class Sender:
 
         event = {}
         event["Name"] = "Step"
+        event["EWMA"] = self.reward_ewma
         event["Time"] = steps_taken
         event["Reward"] = reward
         event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
@@ -216,8 +218,15 @@ class Sender:
         # Super high throughput
         # reward = REWARD_SCALE * (20.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
 
+        # VIVACE TRHOUGHPUT
+        x = 10 * throughput / (8 * BYTES_PER_PACKET)
+
         # Very high thpt
-        reward = (10.0 * throughput / (8 * BYTES_PER_PACKET) - 1e3 * latency - 2e3 * loss)
+        self.last_latency = self.last_latency[-5:] + [latency]
+        reward = (x ** 0.9 -  x * (self.last_latency[-1] - self.last_latency[-2]) - 2 * x * loss)
+
+        if not isinstance(reward, float):
+            print("NOOOOO")
 
         # High thpt
         # reward = REWARD_SCALE * (5.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)

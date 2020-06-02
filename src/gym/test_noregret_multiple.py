@@ -76,16 +76,30 @@ model2 = NoRegretAgent(actions_limits=(40, 1000))
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
-fig, axes = plt.subplots(2, figsize=(10, 12))
+fig, axes = plt.subplots(3, figsize=(10, 12))
 sender1_axis = axes[0]
 sender2_axis = axes[1]
+sender_ewma_axis = axes[2]
 
 def plot_axis(axis, events):
     times = [event["Time"] for event in events[-501:]]
+    send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
     throu = [event["Throughput"] for event in events[-500:]]
     optim = [8*event["Optimal"] for event in events[-501:]]
+    axis.plot(times[:500], send, "g-", label="Sent")
     axis.plot(times[:500], throu, "r-", label="Throughput")
     axis.plot(times, optim, "b--", label="Optimal")
+
+def plot_ewma(axis, event_arr):
+    colors = ["r", "b", "g", "p"]
+    i = 0
+    for events in event_arr:
+        times = [event["Time"] for event in events[-500:]]
+        ewma = [event["EWMA"] for event in events[-500:]]
+
+        axis.plot(times, ewma, colors[i] + "-", label="Sender" + str(i))
+
+        i += 1
 
 
 obs = env.reset()
@@ -94,19 +108,25 @@ for i in range(1600 * 410):
     #env.senders[0].set_rate(200)
     action = model.predict(rewards[0])
     action2 = model2.predict(rewards[1])
+
+    # print("[Step %d] actions are" % i, action, action2)
+
     env.senders[0].set_rate(action)
     env.senders[1].set_rate(action2)
-    print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
-    obs, rewards, dones, info = env.step([0])
+
+    obs, rewards, dones, info = env.step([0, 0])
+
+    # print("[Step %d] rewards are" % i, rewards)
 
     if i > 0 and i % 400 == 0:
         obs = env.reset()
         plot_axis(sender1_axis, info[0]["Events"])
         plot_axis(sender2_axis, info[1]["Events"])
+        plot_ewma(sender_ewma_axis, [info[0]["Events"], info[1]["Events"]])
         plt.draw()
         plt.pause(0.1)
 
-    if i > 0 and i % 5000 == 0:
+    if i > 0 and i % 10000 == 0:
         obs = env.reset(True)
 
 

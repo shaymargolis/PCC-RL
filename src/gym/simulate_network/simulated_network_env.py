@@ -125,20 +125,36 @@ class SimulatedNetworkEnv(gym.Env):
                 link.print_debug()
 
     def create_new_links_and_senders(self):
-        self.net.reset()
-        
         lat = np.max([link.delay for link in self.net.links])
         self.run_dur = 3 * lat
     
     def use_next_network(self):
-        self.net = self.networks[self.next_network_id]
+        """self.net = self.networks[self.next_network_id]
         self.net.senders = self.senders
 
         for sender in self.senders:
             sender.path = self.net.links
             sender.register_network(self.net)
 
-        self.net.reset()
+        self.net.reset()"""
+
+        new_net = self.networks[self.next_network_id]
+
+        if self.net is None:
+            self.net = new_net
+
+            for sender in self.senders:
+                sender.path = self.net.links
+                sender.register_network(self.net)
+
+            self.net.reset()
+        else:
+            for i in range(len(self.net.links)):
+                new_link = new_net.links[i]
+                self.net.links[i].update_parameters(new_link.bw,
+                                                    new_link.delay,
+                                                    new_link.queue_size,
+                                                    new_link.loss_rate)
 
         self.next_network_id += 1
         if self.next_network_id >= len(self.networks):
@@ -158,10 +174,6 @@ class SimulatedNetworkEnv(gym.Env):
         if self.episodes_run > 0 and self.episodes_run % 100 == 0:
             self.dump_events_to_file(self.output + "/pcc_env_log_run_%d" % self.episodes_run)
 
-        self.net.run_for_dur(self.run_dur)
-        self.net.run_for_dur(self.run_dur)
-        self.net.run_for_dur(self.run_dur)
-        
         return self._get_all_sender_obs()
 
     def render(self, mode='human'):

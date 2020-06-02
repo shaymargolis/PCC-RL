@@ -40,9 +40,7 @@ def get_network(senders: [Sender], bw: int):
     #  Create two random identical links
     link1 = Link.generate_random_link()
     link1.bw = bw
-    link2 = Link(bw, link1.delay, link1.queue_delay, link1.loss_rate)
-
-    links = [link1, link2]
+    links = [link1]
 
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
@@ -69,8 +67,6 @@ model = NoRegretAgent(actions_limits=(40, 1000))
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
-plt.figure()
-plt.legend()
 
 obs = env.reset()
 rewards = [0]

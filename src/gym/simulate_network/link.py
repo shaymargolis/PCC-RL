@@ -39,6 +39,16 @@ class Link:
         self.loss_rate = loss_rate
         self.queue_delay = 0.0
         self.queue_delay_update_time = 0.0
+        self.queue_size = queue_size
+        self.max_queue_delay = queue_size / self.bw
+
+    def update_parameters(self, bandwidth, delay, queue_size, loss_rate):
+        self.bw = float(bandwidth)
+        self.delay = delay
+        self.queue_size = queue_size
+        self.queue_delay = 0.0
+        self.queue_delay_update_time = 0.0
+        self.loss_rate = loss_rate
         self.max_queue_delay = queue_size / self.bw
 
     def get_cur_queue_delay(self, event_time):
