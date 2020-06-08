@@ -13,6 +13,7 @@
 # limitations under the License.
 import random
 
+from tqdm import tqdm
 import gym
 import os
 import sys
@@ -45,7 +46,8 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200, 300, 200, 400, 100, 300, 600]
+# bws = [200, 300, 200, 400, 100, 300, 600]
+bws = [200]
 
 senders = [
     Sender(
@@ -68,31 +70,80 @@ model = NoRegretAgent(actions_limits=(40, 1000))
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
+pbar = tqdm(total=100)
+
 obs = env.reset()
 rewards = [0]
-for i in range(1600 * 410):
+for i in range(10000):
     #env.senders[0].set_rate(200)
     action = model.predict(rewards[0])
-    env.senders[0].set_rate(action)
-    print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
+    env.senders[0].set_rate(int(action))
+    # env.senders[0].set_rate(250 - i/2000*250)
+    # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
     obs, rewards, dones, info = env.step([0])
 
-    event = info[0]["Events"][-1]
+    # if i > 0 and i % 400 == 0:
+    #     event = info[0]["Events"][-1]
+    #     obs = env.reset()
+    #     times = [event["Time"] for event in info[0]["Events"][-501:]]
+    #     send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
+    #     throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
+    #     optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
+    #     plt.plot(times[:500], throu, "g.", label="Throughput")
+    #     plt.plot(times[:500], send, "r.", label="Send rate")
+    #     plt.plot(times, optim, "b--", label="Optimal")
+    #     plt.draw()
+    #     plt.pause(0.01)
+    #
+    #     for sender in env.senders:
+    #         sender.reset_events()
 
-    if i > 0 and i % 400 == 0:
-        obs = env.reset()
-        times = [event["Time"] for event in info[0]["Events"][-501:]]
-        send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
-        throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
-        optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
-        plt.plot(times[:500], throu, "g.", label="Throughput")
-        plt.plot(times[:500], send, "r.", label="Send rate")
-        plt.plot(times, optim, "b--", label="Optimal")
-        plt.draw()
-        plt.pause(0.01)
-
-    if i > 0 and i % 5000 == 0:
+    if i > 0 and i % 10000 == 0:
         obs = env.reset(True)
 
 
     env.render()
+
+    if i % 100 == 0:
+        pbar.update(1)
+
+
+fig, ax = plt.subplots(nrows=3, ncols=2)
+
+times = [event["Time"] for event in info[0]["Events"]]
+send = [event["Send Rate"] for event in info[0]["Events"]]
+throu = [event["Throughput"] for event in info[0]["Events"]]
+optim = [8*event["Optimal"] for event in info[0]["Events"]]
+latency = [event["Latency Gradient"] for event in info[0]["Events"]]
+lat = [event["Latency"] for event in info[0]["Events"]]
+loss = [event["Loss Rate"] for event in info[0]["Events"]]
+reward = [event["Reward"] for event in info[0]["Events"]]
+ax[0][0].title.set_text("Sending rate")
+ax[0][0].plot(times, throu, "g.", label="Throughput")
+ax[0][0].plot(times, send, "r.", label="Send rate")
+ax[0][0].plot(times, optim, "b--", label="Optimal")
+ax[0][0].legend()
+ax[0][0].grid()
+
+ax[0][1].title.set_text("Latency Gradient")
+ax[0][1].plot(times, latency, "r.", label="Latency Gradient")
+ax[0][1].legend()
+ax[0][1].grid()
+
+ax[1][0].title.set_text("Reward")
+ax[1][0].plot(times, reward, "b.", label="Reward")
+ax[1][0].legend()
+ax[1][0].grid()
+
+ax[1][1].title.set_text("Loss")
+ax[1][1].plot(times, loss, "g.", label="Loss")
+ax[1][1].legend()
+ax[1][1].grid()
+
+ax[2][0].title.set_text("Latency")
+ax[2][0].plot(times, lat, "b.", label="Latency")
+ax[2][0].plot(times, np.ones(len(times)) * networks[0].links[0].delay, "r--", label="Link latency")
+ax[2][0].legend()
+ax[2][0].grid()
+
+plt.show()

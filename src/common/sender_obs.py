@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+from scipy.optimize import curve_fit
 
 # The monitor interval class used to pass data from the PCC subsystem to
 # the machine learning module.
@@ -27,7 +28,7 @@ class SenderMonitorInterval():
                  send_end=0.0,
                  recv_start=0.0,
                  recv_end=0.0,
-                 rtt_samples=[],
+                 rtt_samples=None,
                  packet_size=1500):
         self.features = {}
         self.sender_id = sender_id
@@ -38,7 +39,7 @@ class SenderMonitorInterval():
         self.send_end = send_end
         self.recv_start = recv_start
         self.recv_end = recv_end
-        self.rtt_samples = rtt_samples
+        self.rtt_samples = rtt_samples if rtt_samples is not None else []
         self.packet_size = packet_size
 
     def get(self, feature):
@@ -110,7 +111,7 @@ def get_max_obs_vector(feature_names):
 def _mi_metric_recv_rate(mi):
     dur = mi.get("recv dur")
     if dur > 0.0:
-        return 8.0 * (mi.bytes_acked - mi.packet_size) / dur
+        return 8.0 * (mi.bytes_acked) / dur
     return 0.0
 
 def _mi_metric_recv_dur(mi):
@@ -119,6 +120,18 @@ def _mi_metric_recv_dur(mi):
 def _mi_metric_avg_latency(mi):
     if len(mi.rtt_samples) > 0:
         return np.mean(mi.rtt_samples)
+    return 0.0
+
+def _mi_metric_grad_latency(mi):
+    dur = mi.get("recv dur")
+
+    def linear_func(x, a, b):
+        return a * x + b
+
+    l = len(mi.rtt_samples)
+    if l >= 100:
+        popt, pcov = curve_fit(linear_func, np.linspace(0, dur/l*100, len(mi.rtt_samples[:100])), mi.rtt_samples[:100])
+        return popt[0]
     return 0.0
 
 def _mi_metric_send_rate(mi):
@@ -196,6 +209,7 @@ SENDER_MI_METRICS = [
     SenderMonitorIntervalMetric("recv dur", _mi_metric_recv_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("send dur", _mi_metric_send_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("avg latency", _mi_metric_avg_latency, 0.0, 100.0),
+    SenderMonitorIntervalMetric("grad latency", _mi_metric_grad_latency, 0.0, 100.0, 1),
     SenderMonitorIntervalMetric("loss ratio", _mi_metric_loss_ratio, 0.0, 1.0),
     SenderMonitorIntervalMetric("ack latency inflation", _mi_metric_ack_latency_inflation, -1.0, 10.0),
     SenderMonitorIntervalMetric("sent latency inflation", _mi_metric_sent_latency_inflation, -1.0, 10.0),

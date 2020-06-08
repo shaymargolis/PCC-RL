@@ -2,7 +2,7 @@ import json
 import numpy as np
 from src.common import sender_obs, config
 from src.gym.simulate_network.constants import *
-
+from scipy.optimize import curve_fit
 
 class Sender:
     def __init__(self, rate, path, dest, features, cwnd=25, history_len=10):
@@ -35,8 +35,9 @@ class Sender:
         self.event_record = {"Events": []}
         self.reward_sum = 0
         self.reward_ewma = 0
-        self.last_latency = [0]
-
+        self.reward_total = 0
+        self.latency = []
+        self.latency_times = []
         self.cwnd = cwnd
 
     _next_id = 1
@@ -158,7 +159,8 @@ class Sender:
 
         self.reward_ewma *= 0.99
         self.reward_ewma += 0.01 * self.reward_sum
-        print("[Sender %d] Reward: %0.2f, Ewma Reward: %0.2f" % (self.id, self.reward_sum, self.reward_ewma))
+        self.reward_total += self.reward_sum
+        print("[Sender %d] Reward: %0.2f, Total Reward: %0.2f, Ewma Reward: %0.2f" % (self.id, self.reward_sum, self.reward_total, self.reward_ewma))
         self.reward_sum = 0.0
 
     def dump_events_to_file(self, filename):
@@ -176,13 +178,14 @@ class Sender:
         :return: New run dur
         """
 
-        reward = self.get_reward()
+        reward, latency = self.get_reward()
 
         sender_mi = self.get_run_data()
 
         event = {}
         event["Name"] = "Step"
         event["EWMA"] = self.reward_ewma
+        event["TotalReward"] = self.reward_total
         event["Time"] = steps_taken
         event["Reward"] = reward
         event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
@@ -191,6 +194,7 @@ class Sender:
         event["Throughput"] = sender_mi.get("recv rate")
         event["Latency"] = sender_mi.get("avg latency")
         event["Loss Rate"] = sender_mi.get("loss ratio")
+        event["Latency Gradient"] = latency
         event["Latency Inflation"] = sender_mi.get("sent latency inflation")
         event["Latency Ratio"] = sender_mi.get("latency ratio")
         event["Send Ratio"] = sender_mi.get("send ratio")
@@ -204,9 +208,14 @@ class Sender:
         self.reward_sum += reward
         return run_dur
 
+    def reset_events(self):
+        self.event_record = {"Events": []}
+
     def get_reward(self):
         sender_mi = self.get_run_data()
+        dur = sender_mi.get("recv dur")
         throughput = sender_mi.get("recv rate")
+        sent = sender_mi.get("send rate")
         latency = sender_mi.get("avg latency")
         loss = sender_mi.get("loss ratio")
         bw_cutoff = self.path[0].bw * 0.8
@@ -218,12 +227,31 @@ class Sender:
         # Super high throughput
         # reward = REWARD_SCALE * (20.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
 
+        def linear_func(x, a, b):
+            return a * x + b
+
+        if len(self.latency) == 0:
+            self.latency = [0]
+
+        self.latency = self.latency[-4:] + [latency]
+
+        if len(self.latency_times) == 0:
+            self.latency_times = [0]
+
+        self.latency_times = self.latency_times[-4:] + [self.latency_times[-1] + dur]
+
+        latency = 0
+        if len(self.latency) > 2:
+            popt, pcov = curve_fit(linear_func, self.latency_times[-4:],
+                                   self.latency[-4:])
+            latency = popt[0]
+
         # VIVACE TRHOUGHPUT
-        x = 10 * throughput / (8 * BYTES_PER_PACKET)
+        #x = 10 * throughput / (8 * BYTES_PER_PACKET)
+        x = 10 * sent / (8 * BYTES_PER_PACKET)
 
         # Very high thpt
-        self.last_latency = self.last_latency[-5:] + [latency]
-        reward = (x ** 0.9 -  x * (self.last_latency[-1] - self.last_latency[-2]) - 2 * x * loss)
+        reward = (x - 900 * x * latency - 11 * x * loss)
 
         if not isinstance(reward, float):
             print("NOOOOO")
@@ -237,7 +265,7 @@ class Sender:
         # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
 
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward * REWARD_SCALE
+        return reward * REWARD_SCALE, latency
 
     def __le__(self, other):
         return self.id <= other.id

@@ -13,11 +13,11 @@ class Link:
 
     @staticmethod
     def get_queue_limits():
-        return (0, 8)
+        return (0, 6)
 
     @staticmethod
     def get_loss_limits():
-        return (0.0, 0.05)
+        return (0.0, 0.0)
 
     @staticmethod
     def generate_random_link():
