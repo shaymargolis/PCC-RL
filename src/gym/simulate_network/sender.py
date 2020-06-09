@@ -251,7 +251,7 @@ class Sender:
         x = 10 * sent / (8 * BYTES_PER_PACKET)
 
         # Very high thpt
-        reward = (x - 900 * x * latency - 11 * x * loss)
+        reward = (x - 9 * x * latency - 3 * x * loss)
 
         if not isinstance(reward, float):
             print("NOOOOO")

@@ -129,9 +129,21 @@ def _mi_metric_grad_latency(mi):
         return a * x + b
 
     l = len(mi.rtt_samples)
-    if l >= 100:
-        popt, pcov = curve_fit(linear_func, np.linspace(0, dur/l*100, len(mi.rtt_samples[:100])), mi.rtt_samples[:100])
+    if l >= 2:
+        return ( mi.rtt_samples[-1] - mi.rtt_samples[0] ) / dur
+        popt, pcov = curve_fit(linear_func, np.linspace(0, dur, len(mi.rtt_samples)), mi.rtt_samples)
         return popt[0]
+    return 0.0
+
+
+def _mi_metric_change_latency(mi):
+    l = len(mi.rtt_samples)
+    if l >= 3:
+        half = int(l / 2)
+        first_half = np.mean(mi.rtt_samples[:half])
+        second_half = np.mean(mi.rtt_samples[half:])
+
+        return (mi.rtt_samples[-1] - mi.rtt_samples[0]) / 0.5
     return 0.0
 
 def _mi_metric_send_rate(mi):
@@ -209,7 +221,8 @@ SENDER_MI_METRICS = [
     SenderMonitorIntervalMetric("recv dur", _mi_metric_recv_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("send dur", _mi_metric_send_dur, 0.0, 100.0),
     SenderMonitorIntervalMetric("avg latency", _mi_metric_avg_latency, 0.0, 100.0),
-    SenderMonitorIntervalMetric("grad latency", _mi_metric_grad_latency, 0.0, 100.0, 1),
+    SenderMonitorIntervalMetric("grad latency", _mi_metric_grad_latency, 0.0, 100.0, 1.0),
+    SenderMonitorIntervalMetric("chang latency", _mi_metric_change_latency, 0.0, 100.0, 1.0),
     SenderMonitorIntervalMetric("loss ratio", _mi_metric_loss_ratio, 0.0, 1.0),
     SenderMonitorIntervalMetric("ack latency inflation", _mi_metric_ack_latency_inflation, -1.0, 10.0),
     SenderMonitorIntervalMetric("sent latency inflation", _mi_metric_sent_latency_inflation, -1.0, 10.0),

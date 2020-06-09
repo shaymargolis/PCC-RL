@@ -76,9 +76,9 @@ obs = env.reset()
 rewards = [0]
 for i in range(10000):
     #env.senders[0].set_rate(200)
-    action = model.predict(rewards[0])
-    env.senders[0].set_rate(int(action))
-    # env.senders[0].set_rate(250 - i/2000*250)
+    # action = model.predict(rewards[0])
+    # env.senders[0].set_rate(int(action))
+    env.senders[0].set_rate(int(i/2000*250))
     # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
     obs, rewards, dones, info = env.step([0])
 

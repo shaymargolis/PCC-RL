@@ -52,7 +52,7 @@ class NoRegretAgent:
         #if gradient < -5:
         #    gradient = -5
 
-        self.action = self.project_action(self.action - self.mu * gradient)
+        self.action = self.project_action(self.action + self.mu * gradient)
         self.update_gradient_ascent_speed()
 
         #  Generate next random choice
