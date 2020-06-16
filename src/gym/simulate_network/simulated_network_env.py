@@ -126,7 +126,7 @@ class SimulatedNetworkEnv(gym.Env):
 
     def create_new_links_and_senders(self):
         lat = np.max([link.delay for link in self.net.links])
-        self.run_dur = 3 * lat
+        self.run_dur = 5 * lat
     
     def use_next_network(self):
         """self.net = self.networks[self.next_network_id]

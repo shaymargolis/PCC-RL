@@ -13,11 +13,11 @@
 # limitations under the License.
 import random
 
-from tqdm import tqdm
 import gym
 import os
 import sys
 import inspect
+from tqdm import tqdm
 import numpy as np
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -46,8 +46,7 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-# bws = [200, 300, 200, 400, 100, 300, 600]
-bws = [200]
+bws = [200, 300, 200, 100, 200]
 
 senders = [
     Sender(
@@ -62,7 +61,7 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 1000))
+model = NoRegretAgent(actions_limits=(40, 300), C=300, L=8)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -70,15 +69,19 @@ model = NoRegretAgent(actions_limits=(40, 1000))
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
-pbar = tqdm(total=100)
+pbar = tqdm(total=510)
 
 obs = env.reset()
-rewards = [0]
-for i in range(10000):
+rewards = [0, 0]
+for i in range(51000):
     #env.senders[0].set_rate(200)
-    # action = model.predict(rewards[0])
-    # env.senders[0].set_rate(int(action))
-    env.senders[0].set_rate(int(250-i/2000*250))
+    action = model.predict(rewards[0])
+    env.senders[0].set_rate(action)
+
+    #action = model2.predict(rewards[0])
+    #env.senders[1].set_rate(action)
+    #env.senders[0].set_rate(int(250-i/2000*250))
+    #env.senders[0].set_rate(i / 5000 * 220)
     # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
     obs, rewards, dones, info = env.step([0])
 
