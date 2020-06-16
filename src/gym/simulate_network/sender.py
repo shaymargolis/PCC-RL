@@ -2,6 +2,7 @@ import json
 import numpy as np
 from src.common import sender_obs, config
 from src.gym.simulate_network.constants import *
+from scipy.optimize import curve_fit
 
 
 class Sender:
@@ -176,7 +177,7 @@ class Sender:
         :return: New run dur
         """
 
-        reward = self.get_reward()
+        reward, latency_grad = self.get_reward()
 
         sender_mi = self.get_run_data()
 
@@ -191,6 +192,7 @@ class Sender:
         event["Throughput"] = sender_mi.get("recv rate")
         event["Latency"] = sender_mi.get("avg latency")
         event["Loss Rate"] = sender_mi.get("loss ratio")
+        event["Latency Gradient"] = latency_grad
         event["Latency Inflation"] = sender_mi.get("sent latency inflation")
         event["Latency Ratio"] = sender_mi.get("latency ratio")
         event["Send Ratio"] = sender_mi.get("send ratio")
@@ -198,7 +200,7 @@ class Sender:
         # event["Cwnd Used"] = sender_mi.cwnd_used
         self.event_record["Events"].append(event)
         if event["Latency"] > 0.0:
-            run_dur = 0.5 * sender_mi.get("avg latency")
+            run_dur = 1.5 * sender_mi.get("avg latency")
         # print("Sender obs: %s" % sender_obs)
 
         self.reward_sum += reward
@@ -206,7 +208,8 @@ class Sender:
 
     def get_reward(self):
         sender_mi = self.get_run_data()
-        throughput = sender_mi.get("recv rate")
+        # throughput = sender_mi.get("recv rate")
+        sent = sender_mi.get("send rate")
         latency = sender_mi.get("avg latency")
         loss = sender_mi.get("loss ratio")
         bw_cutoff = self.path[0].bw * 0.8
@@ -219,11 +222,28 @@ class Sender:
         # reward = REWARD_SCALE * (20.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
 
         # VIVACE TRHOUGHPUT
-        x = 10 * throughput / (8 * BYTES_PER_PACKET)
+        # x = 10 * throughput / (8 * BYTES_PER_PACKET)
+        x = sent / (8 * BYTES_PER_PACKET)
+        x = self.rate
 
         # Very high thpt
         self.last_latency = self.last_latency[-5:] + [latency]
-        reward = (x ** 0.9 -  x * (self.last_latency[-1] - self.last_latency[-2]) - 2 * x * loss)
+
+        def linear_func(x, a, b):
+            return a*x + b
+
+        latency = 0
+        if len(self.last_latency) > 2:
+            popt, pcov = curve_fit(linear_func, range(len(self.last_latency[-4:])),
+                                   self.last_latency[-4:])
+            latency = popt[0]
+
+        reward = - (x - 900 * x * latency - 11 * x * loss)
+
+        if reward > x:
+            return x, latency
+        else:
+            return -x, latency
 
         if not isinstance(reward, float):
             print("NOOOOO")
@@ -237,7 +257,7 @@ class Sender:
         # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
 
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward * REWARD_SCALE
+        return reward * REWARD_SCALE, latency
 
     def __le__(self, other):
         return self.id <= other.id

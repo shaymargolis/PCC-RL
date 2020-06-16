@@ -106,7 +106,7 @@ class SimulatedNetworkEnv(gym.Env):
         done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
         info_n = [sender.event_record for sender in self.senders]
 
-        reward_n = [sender.get_reward() for sender in self.senders]
+        reward_n = [sender.get_reward()[0] for sender in self.senders]
 
         self.steps_taken += 1
         self.total_steps_taken += 1
@@ -126,7 +126,7 @@ class SimulatedNetworkEnv(gym.Env):
 
     def create_new_links_and_senders(self):
         lat = np.max([link.delay for link in self.net.links])
-        self.run_dur = 3 * lat
+        self.run_dur = 5 * lat
     
     def use_next_network(self):
         """self.net = self.networks[self.next_network_id]

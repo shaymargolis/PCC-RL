@@ -47,7 +47,7 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200, 300, 200, 400, 100, 300, 600]
+bws = [200]
 
 senders = [
     Sender(
@@ -68,8 +68,8 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 1000))
-model2 = NoRegretAgent(actions_limits=(40, 1000))
+model = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
+model2 = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -83,7 +83,7 @@ sender_ewma_axis = axes[2]
 
 def plot_axis(axis, events):
     times = [event["Time"] for event in events[-501:]]
-    send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
+    send = [event["Send Rate"] for event in events[-500:]]
     throu = [event["Throughput"] for event in events[-500:]]
     optim = [8*event["Optimal"] for event in events[-501:]]
     axis.plot(times[:500], send, "g-", label="Sent")

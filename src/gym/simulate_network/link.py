@@ -9,15 +9,15 @@ class Link:
 
     @staticmethod
     def get_lat_limits():
-        return (0.05, 0.5)
+        return (0.09, 0.1)
 
     @staticmethod
     def get_queue_limits():
-        return (0, 8)
+        return (3, 3)
 
     @staticmethod
     def get_loss_limits():
-        return (0.0, 0.05)
+        return (0.0, 0.0)
 
     @staticmethod
     def generate_random_link():
