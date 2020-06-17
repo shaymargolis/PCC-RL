@@ -68,9 +68,9 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
-model2 = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
-model3 = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
+model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=8)
+model2 = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=8)
+model3 = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=8)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]

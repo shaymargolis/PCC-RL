@@ -56,7 +56,7 @@ class Network():
                         # print("Packet acked at time %f" % self.cur_time)
                 else:
                     new_next_hop = next_hop + 1
-                    link_latency = sender.path[next_hop].get_cur_latency(self.cur_time)
+                    link_latency = sender.path[next_hop].delay # sender.path[next_hop].get_cur_latency(self.cur_time)
                     if USE_LATENCY_NOISE:
                         link_latency *= random.uniform(1.0, MAX_LATENCY_NOISE)
                     new_latency += link_latency

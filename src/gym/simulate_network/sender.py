@@ -243,12 +243,13 @@ class Sender:
         #                           self.last_latency[-4:])
         #    latency = popt[0]
 
-        reward = - (x - 900 * x * latency - 11 * x * loss)
+        reward = - (x - 11 * x * loss)
+        # print("X", x, "LOSS", loss, "LAT", latency, "REWA", reward)
 
-        if reward > x:
-            return x, latency
-        else:
-            return -x, latency
+        # if reward > 300:
+        #     return 300, latency
+        # if reward < -300:
+        #     return -300, latency
 
         if not isinstance(reward, float):
             print("NOOOOO")
@@ -262,7 +263,7 @@ class Sender:
         # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
 
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward * REWARD_SCALE, latency
+        return reward, latency
 
     def __le__(self, other):
         return self.id <= other.id

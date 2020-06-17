@@ -46,7 +46,7 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200]
+bws = [200, 300, 200, 300]
 
 senders = [
     Sender(
@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 300), C=300, L=8)
+model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=0.5)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -70,7 +70,7 @@ model = NoRegretAgent(actions_limits=(40, 300), C=300, L=8)
 
 
 # TIMES = 51000
-TIMES = 7000
+TIMES = 23000
 
 pbar = tqdm(total=TIMES / 100)
 
@@ -85,6 +85,7 @@ for i in range(TIMES):
     #env.senders[1].set_rate(action)
     #env.senders[0].set_rate(int(250-i/2000*250))
     #env.senders[0].set_rate(i / 5000 * 220)
+    #env.senders[0].set_rate(210)
     # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
     obs, rewards, dones, info = env.step([0])
 

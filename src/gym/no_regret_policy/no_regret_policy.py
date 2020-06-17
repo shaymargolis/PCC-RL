@@ -5,7 +5,7 @@ rng = random.SystemRandom()
 
 
 class NoRegretAgent:
-    def __init__(self, actions_limits: tuple, C: int, L: int):
+    def __init__(self, actions_limits: tuple, C: float, L: float):
         self.action_limits = actions_limits
         self.D = actions_limits[1] - actions_limits[0]
         self.C = C
