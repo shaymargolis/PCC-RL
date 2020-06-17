@@ -70,25 +70,36 @@ networks = [get_network(senders, bw) for bw in bws]
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
 model = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
 model2 = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
+model3 = NoRegretAgent(actions_limits=(40, 300), C=300, L=10)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
-fig, axes = plt.subplots(3, figsize=(10, 12))
-sender1_axis = axes[0]
-sender2_axis = axes[1]
-sender_ewma_axis = axes[2]
+fig, axes = plt.subplots(2, figsize=(10, 12))
+senders_axis = axes[0]
+sender_ewma_axis = axes[1]
 
-def plot_axis(axis, events):
-    times = [event["Time"] for event in events[-501:]]
-    send = [event["Send Rate"] for event in events[-500:]]
-    throu = [event["Throughput"] for event in events[-500:]]
-    optim = [8*event["Optimal"] for event in events[-501:]]
-    axis.plot(times[:500], send, "g-", label="Sent")
-    axis.plot(times[:500], throu, "r-", label="Throughput")
+def plot_axis(axis, events_arr):
+    colors = [('r', 'g'), ('b', 'm'), ('k', 'y')]
+
+    times = []
+    optim = []
+
+    for i in range(len(events_arr)):
+        events = events_arr[i]
+
+        times = [event["Time"] for event in events[-501:]]
+        optim = [8*event["Optimal"] for event in events[-501:]]
+        send = [event["Send Rate"] for event in events[-500:]]
+        throu = [event["Throughput"] for event in events[-500:]]
+
+        axis.plot(times[:500], send, colors[i][0] + "-", label="[%d] Sent" % (i+1))
+        # axis.plot(times[:500], throu, colors[i][1] + "x", label="[%d] Throughput" % (i+1))
+
     axis.plot(times, optim, "b--", label="Optimal")
+    axis.plot(times, np.array(optim)/2, "r--", label="Optimal/2")
 
 def plot_ewma(axis, event_arr):
     colors = ["r", "b", "g", "p"]
@@ -103,16 +114,18 @@ def plot_ewma(axis, event_arr):
 
 
 obs = env.reset()
-rewards = [0, 0]
+rewards = [0, 0, 0]
 for i in range(1600 * 410):
     #env.senders[0].set_rate(200)
     action = model.predict(rewards[0])
     action2 = model2.predict(rewards[1])
+    # action3 = model3.predict(rewards[2])
 
     # print("[Step %d] actions are" % i, action, action2)
 
     env.senders[0].set_rate(action)
     env.senders[1].set_rate(action2)
+    # env.senders[2].set_rate(action3)
 
     obs, rewards, dones, info = env.step([0, 0])
 
@@ -120,9 +133,12 @@ for i in range(1600 * 410):
 
     if i > 0 and i % 400 == 0:
         obs = env.reset()
-        plot_axis(sender1_axis, info[0]["Events"])
-        plot_axis(sender2_axis, info[1]["Events"])
-        plot_ewma(sender_ewma_axis, [info[0]["Events"], info[1]["Events"]])
+        plot_axis(senders_axis, [x["Events"] for x in info])
+        plot_ewma(sender_ewma_axis, [x["Events"] for x in info])
+
+        if i == 400:
+            senders_axis.legend()
+
         plt.draw()
         plt.pause(0.1)
 

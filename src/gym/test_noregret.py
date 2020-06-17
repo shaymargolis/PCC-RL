@@ -46,7 +46,7 @@ def get_network(senders: [Sender], bw: int):
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200, 300, 200, 100, 200]
+bws = [200]
 
 senders = [
     Sender(
@@ -69,11 +69,14 @@ model = NoRegretAgent(actions_limits=(40, 300), C=300, L=8)
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
-pbar = tqdm(total=510)
+# TIMES = 51000
+TIMES = 7000
+
+pbar = tqdm(total=TIMES / 100)
 
 obs = env.reset()
 rewards = [0, 0]
-for i in range(51000):
+for i in range(TIMES):
     #env.senders[0].set_rate(200)
     action = model.predict(rewards[0])
     env.senders[0].set_rate(action)

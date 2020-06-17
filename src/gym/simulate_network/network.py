@@ -52,7 +52,7 @@ class Network():
                         sender.on_packet_lost()
                         # print("Packet lost at time %f" % self.cur_time)
                     else:
-                        sender.on_packet_acked(cur_latency)
+                        sender.on_packet_acked(cur_latency, event_time)
                         # print("Packet acked at time %f" % self.cur_time)
                 else:
                     new_next_hop = next_hop + 1

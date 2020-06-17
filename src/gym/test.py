@@ -59,6 +59,11 @@ senders = [
         random.uniform(0.3, 1.5) * bws[0],
         None, 0, features.split(","),
         history_len=history_len
+    ),
+    Sender(
+        random.uniform(0.3, 1.5) * bws[0],
+        None, 0, features.split(","),
+        history_len=history_len
     )
 ]
 
@@ -68,6 +73,7 @@ networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
 model = PPO1.load("./pcc_model_23", env)
+model2 = PPO1.load("./pcc_model_23", env)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -80,7 +86,8 @@ plt.legend()
 obs = env.reset()
 for i in range(1600 * 410):
     action, _states = model.predict(obs[0])
-    obs, rewards, dones, info = env.step(action)
+    action2, _states = model2.predict(obs[1])
+    obs, rewards, dones, info = env.step(action + action2)
 
     event = info[0]["Events"][-1]
 

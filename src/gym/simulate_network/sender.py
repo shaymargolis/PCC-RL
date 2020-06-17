@@ -24,6 +24,7 @@ class Sender:
         self.bytes_in_flight = 0
         self.min_latency = None
         self.rtt_samples = []
+        self.event_samples = []
         self.sample_time = []
         self.net = None
         self.path = path
@@ -77,9 +78,10 @@ class Sender:
         self.sent += 1
         self.bytes_in_flight += BYTES_PER_PACKET
 
-    def on_packet_acked(self, rtt):
+    def on_packet_acked(self, rtt, event_time):
         self.acked += 1
         self.rtt_samples.append(rtt)
+        self.event_samples.append(event_time)
         if (self.min_latency is None) or (rtt < self.min_latency):
             self.min_latency = rtt
         self.bytes_in_flight -= BYTES_PER_PACKET
@@ -129,6 +131,7 @@ class Sender:
             recv_start=self.obs_start_time,
             recv_end=obs_end_time,
             rtt_samples=self.rtt_samples,
+            event_samples=self.event_samples,
             packet_size=BYTES_PER_PACKET
         )
 
@@ -137,6 +140,7 @@ class Sender:
         self.acked = 0
         self.lost = 0
         self.rtt_samples = []
+        self.event_samples = []
         self.obs_start_time = self.net.get_cur_time()
 
     def print_debug(self):
@@ -210,7 +214,8 @@ class Sender:
         sender_mi = self.get_run_data()
         # throughput = sender_mi.get("recv rate")
         sent = sender_mi.get("send rate")
-        latency = sender_mi.get("avg latency")
+        # latency = sender_mi.get("avg latency")
+        grad_latency = sender_mi.get("grad latency")
         loss = sender_mi.get("loss ratio")
         bw_cutoff = self.path[0].bw * 0.8
         lat_cutoff = 2.0 * self.path[0].delay * 1.5
@@ -223,20 +228,20 @@ class Sender:
 
         # VIVACE TRHOUGHPUT
         # x = 10 * throughput / (8 * BYTES_PER_PACKET)
-        x = sent / (8 * BYTES_PER_PACKET)
+        # x = sent / (8 * BYTES_PER_PACKET)
         x = self.rate
 
         # Very high thpt
-        self.last_latency = self.last_latency[-5:] + [latency]
+        # self.last_latency = self.last_latency[-5:] + [latency]
 
-        def linear_func(x, a, b):
-            return a*x + b
+        #def linear_func(x, a, b):
+        #    return a*x + b
 
-        latency = 0
-        if len(self.last_latency) > 2:
-            popt, pcov = curve_fit(linear_func, range(len(self.last_latency[-4:])),
-                                   self.last_latency[-4:])
-            latency = popt[0]
+        latency = grad_latency
+        #if len(self.last_latency) > 2:
+        #    popt, pcov = curve_fit(linear_func, range(len(self.last_latency[-4:])),
+        #                           self.last_latency[-4:])
+        #    latency = popt[0]
 
         reward = - (x - 900 * x * latency - 11 * x * loss)
 

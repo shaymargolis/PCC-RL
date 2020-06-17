@@ -29,6 +29,7 @@ class SenderMonitorInterval():
                  recv_start=0.0,
                  recv_end=0.0,
                  rtt_samples=None,
+                 event_samples=None,
                  packet_size=1500):
         self.features = {}
         self.sender_id = sender_id
@@ -40,6 +41,7 @@ class SenderMonitorInterval():
         self.recv_start = recv_start
         self.recv_end = recv_end
         self.rtt_samples = rtt_samples if rtt_samples is not None else []
+        self.event_samples = event_samples if event_samples is not None else []
         self.packet_size = packet_size
 
     def get(self, feature):
@@ -129,10 +131,19 @@ def _mi_metric_grad_latency(mi):
         return a * x + b
 
     l = len(mi.rtt_samples)
+    third = int(2*l/3)
     if l >= 2:
-        return ( mi.rtt_samples[-1] - mi.rtt_samples[0] ) / dur
-        popt, pcov = curve_fit(linear_func, np.linspace(0, dur, len(mi.rtt_samples)), mi.rtt_samples)
-        return popt[0]
+        try:
+            popt, pcov = curve_fit(linear_func, mi.event_samples, mi.rtt_samples)
+            a = popt[0]
+
+            if np.abs(a) < 0.01:
+                return 0.0
+
+            return a
+        except:
+            return 0.0
+
     return 0.0
 
 
