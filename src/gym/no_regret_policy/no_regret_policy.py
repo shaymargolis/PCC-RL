@@ -19,10 +19,17 @@ class NoRegretAgent:
         self.reset()
 
     def reset(self):
+        self.reset_learning_rate()
+        self.action = 0
+
+    def reset_learning_rate(self):
         self.mu = self.D
         self.delta = 1
         self.T = 0
-        self.action = 0
+
+    def faster_learning_rate(self):
+        self.T = 500
+        self.update_gradient_ascent_speed()
 
     def update_gradient_ascent_speed(self):
         self.T += 1
