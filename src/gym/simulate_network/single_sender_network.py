@@ -34,34 +34,22 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
 
     def step(self, action):
         obs_n, reward_n, done_n, info_n = super().step(action)
-				
         return obs_n[0], reward_n[0], done_n[0], info_n[0]
-	
+
     def generate_random_network(self):
         #  Create two random identical links
         link1 = Link.generate_random_link()
-        link2 = Link(link1.bw, link1.delay, link1.queue_delay, link1.loss_rate)
 
-        links = [link1, link2]
+        links = [link1]
 
         bw = link1.bw
 
         #  Create the sender
-        senders = [
-            
-        ]
-        
-        if self.created_network is not None:
-            senders = self.created_network.senders
-            senders[0].path = links
-            senders[0].rate = random.uniform(0.3, 1.5) * bw
-            senders[0].reset()
-        else:
-            senders = [Sender(
-                random.uniform(0.3, 1.5) * bw,
-                links, 0, self.features,
-                history_len=self.history_len
-            )]
+        senders = [Sender(
+            random.uniform(0.3, 1.5) * bw,
+            links, 0, self.features,
+            history_len=self.history_len
+        )]
 
         #  Init the SimulatedNetwork using the parameters
         return Network(senders, links)
