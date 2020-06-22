@@ -148,13 +148,13 @@ class SimulatedNetworkEnv(gym.Env):
                 sender.register_network(self.net)
 
             self.net.reset()
-        else:
-            for i in range(len(self.net.links)):
-                new_link = new_net.links[i]
-                self.net.links[i].update_parameters(new_link.bw,
-                                                    new_link.delay,
-                                                    new_link.queue_size,
-                                                    new_link.loss_rate)
+
+        for i in range(len(self.net.links)):
+            new_link = new_net.links[i]
+            self.net.links[i].update_parameters(new_link.bw,
+                                                new_link.delay,
+                                                new_link.queue_size,
+                                                new_link.loss_rate)
 
         self.next_network_id += 1
         if self.next_network_id >= len(self.networks):
