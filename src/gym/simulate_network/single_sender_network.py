@@ -65,14 +65,13 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
 
         #  Init the SimulatedNetwork using the parameters
         return Network(senders, links)
-    
+
     def use_next_network(self):
-        self.net = self.generate_random_network()
+        net = self.generate_random_network()
+        self.networks = [net]
+        self.next_network_id = 0
+        super().use_next_network()
 
-        lat = np.max([link.delay for link in self.net.links])
-        self.run_dur = 3 * lat
-
-    
     def reset(self):
         return super().reset(True)[0]
 
