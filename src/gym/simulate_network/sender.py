@@ -249,7 +249,7 @@ class Sender:
         #                           self.last_latency[-4:])
         #    latency = popt[0]
 
-        reward = - (x - x * (900 * latency + 11 * loss))
+        reward = (x - x * (900 * latency + 11 * loss))
         # print("X", x, "LOSS", loss, "LAT", latency, "REWA", reward)
 
         # if reward > 300:

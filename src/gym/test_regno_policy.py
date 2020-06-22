@@ -15,11 +15,11 @@ import matplotlib.pyplot as plt
 
 def convex_func(x):
     # return x
-    return np.sqrt((x - 20) **2 + 5)
+    return - np.sqrt((x - 20) **2 + 5)
 
 def convex_func2(x):
     # return x
-    return np.sqrt((x - 40) **2 + 5)
+    return - np.sqrt((x - 40) **2 + 5)
 
 agent = NoRegretAgent(actions_limits=(-60, 60), C=100, L=1)
 
@@ -39,7 +39,7 @@ for i in range(200000):
     i_list.append(i)
 
     if i % 100 == 0:
-        print(x)
+        # print(x)
         pbar.update(1)
 
 plt.figure()
