@@ -5,6 +5,8 @@ from src.gym.simulate_network.constants import *
 from scipy.optimize import curve_fit
 
 
+BIG_NUMBER = 500
+
 class Sender:
     def __init__(self, rate, path, dest, features, cwnd=25, history_len=10):
         """
@@ -23,8 +25,8 @@ class Sender:
         self.lost = 0
         self.bytes_in_flight = 0
         self.min_latency = None
-        self.rtt_samples = []
-        self.event_samples = []
+        self.rtt_samples = list()
+        self.event_samples = list()
         self.sample_time = []
         self.net = None
         self.path = path
@@ -79,9 +81,13 @@ class Sender:
         self.bytes_in_flight += BYTES_PER_PACKET
 
     def on_packet_acked(self, rtt, event_time):
+        if self.acked < BIG_NUMBER:
+            self.rtt_samples.append(rtt)
+            self.event_samples.append(event_time)
+
         self.acked += 1
-        self.rtt_samples.append(rtt)
-        self.event_samples.append(event_time)
+        # self.rtt_samples.append(rtt)
+        # self.event_samples.append(event_time)
         if (self.min_latency is None) or (rtt < self.min_latency):
             self.min_latency = rtt
         self.bytes_in_flight -= BYTES_PER_PACKET
@@ -139,8 +145,8 @@ class Sender:
         self.sent = 0
         self.acked = 0
         self.lost = 0
-        self.rtt_samples = []
-        self.event_samples = []
+        self.rtt_samples = list()
+        self.event_samples = list()
         self.obs_start_time = self.net.get_cur_time()
 
     def print_debug(self):
@@ -243,7 +249,7 @@ class Sender:
         #                           self.last_latency[-4:])
         #    latency = popt[0]
 
-        reward = - (x - 11 * x * loss)
+        reward = - (x - x * (900 * latency + 11 * loss))
         # print("X", x, "LOSS", loss, "LAT", latency, "REWA", reward)
 
         # if reward > 300:

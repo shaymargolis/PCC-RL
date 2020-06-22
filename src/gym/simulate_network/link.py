@@ -28,7 +28,7 @@ class Link:
 
         bw = random.uniform(min_bw, max_bw)
         lat = random.uniform(min_lat, max_lat)
-        queue = 1 + int(np.exp(random.uniform(min_queue, max_queue)))
+        queue = 1 + int(np.power(2, random.uniform(min_queue, max_queue)))
         loss = random.uniform(min_loss, max_loss)
 
         return Link(bw, lat, queue, loss)
