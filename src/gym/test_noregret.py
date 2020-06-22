@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=0.5)
+model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -69,15 +69,14 @@ model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=0.5)
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
-# TIMES = 51000
-TIMES = 23000
+TIMES = 51000
 
 pbar = tqdm(total=TIMES / 100)
 
 obs = env.reset()
 rewards = [0, 0]
 for i in range(TIMES):
-    #env.senders[0].set_rate(200)
+    # env.senders[0].set_rate(205)
     action = model.predict(rewards[0])
     env.senders[0].set_rate(action)
 
@@ -104,6 +103,9 @@ for i in range(TIMES):
     #
     #     for sender in env.senders:
     #         sender.reset_events()
+
+    if i > 0 and i % 5500 == 0:
+        model.faster_learning_rate()
 
     if i > 0 and i % 10000 == 0:
         obs = env.reset(True)
