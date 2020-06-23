@@ -30,13 +30,14 @@ class Network():
         return self.cur_time
 
     def run_for_dur(self, dur):
+        # print("running for dur", self.cur_time, dur)
         end_time = self.cur_time + dur
         for sender in self.senders:
             sender.reset_obs()
 
         while self.cur_time < end_time:
             event_time, sender, event_type, next_hop, cur_latency, dropped = heapq.heappop(self.q)
-                        
+
             # print("Got event %s, to link %d, latency %f at time %f" % (event_type, next_hop, cur_latency, event_time))
             self.cur_time = event_time
             new_event_time = event_time

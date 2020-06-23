@@ -36,7 +36,8 @@ class Sender:
         self.history = sender_obs.SenderHistory(self.history_len,
                                                 self.features, self.id)
 
-        self.event_record = {"Events": []}
+        self.event_record\
+            = {"Events": []}
         self.reward_sum = 0
         self.reward_ewma = 0
         self.last_latency = [0]
@@ -126,7 +127,10 @@ class Sender:
         # print("Got %d acks in %f seconds" % (self.acked, obs_dur))
         # print("Sent %d packets in %f seconds" % (self.sent, obs_dur))
         # print("self.rate = %f" % self.rate)
-        
+        # self.print_debug()
+        # print("Start: %f" % self.obs_start_time)
+        # print("End: %f" % obs_end_time)
+
         return sender_obs.SenderMonitorInterval(
             self.id,
             bytes_sent=self.sent * BYTES_PER_PACKET,
@@ -150,7 +154,7 @@ class Sender:
         self.obs_start_time = self.net.get_cur_time()
 
     def print_debug(self):
-        print("Sender:")
+        print("[Sender %d]: " % self.id)
         print("Obs: %s" % str(self.get_obs()))
         print("Rate: %f" % self.rate)
         print("Sent: %d" % self.sent)
@@ -269,7 +273,7 @@ class Sender:
         # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
 
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward, latency
+        return reward * REWARD_SCALE, latency
 
     def __le__(self, other):
         return self.id <= other.id

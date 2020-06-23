@@ -13,7 +13,7 @@ class Link:
 
     @staticmethod
     def get_queue_limits():
-        return (5, 5)
+        return (5, 7)
 
     @staticmethod
     def get_loss_limits():

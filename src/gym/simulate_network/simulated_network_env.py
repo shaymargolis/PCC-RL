@@ -76,10 +76,10 @@ class SimulatedNetworkEnv(gym.Env):
             return sender_obs
 
         sender_obs = [get_single_sender_obs(sen) for sen in self.senders]
+
         return sender_obs
 
     def step(self, actions: list):
-        # print(self.run_dur)
         for i in range(len(actions)):  # len(actions)):
             # print("Updating rate for sender %d" % i)
             action = actions[i]
@@ -104,14 +104,15 @@ class SimulatedNetworkEnv(gym.Env):
 
         obs_n = self._get_all_sender_obs()
         done_n = [(self.steps_taken >= self.max_steps or should_stop)] * len(self.senders)
-        info_n = [sender.event_record for sender in self.senders]
 
         reward_n = [sender.get_reward()[0] for sender in self.senders]
 
         self.steps_taken += 1
         self.total_steps_taken += 1
 
-        self.run_dur = np.min([sender.add_event(self.total_steps_taken, self.run_dur) for sender in self.senders])
+        self.run_dur = np.min([sender.add_event(self.total_steps_taken, self.run_dur) for sender in self.senders]),
+
+        info_n = [sender.event_record for sender in self.senders]
 
         return obs_n, reward_n, done_n, info_n
 
@@ -142,6 +143,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         if self.net is None:
             self.net = new_net
+            self.net.senders = self.senders
 
             for sender in self.senders:
                 sender.path = self.net.links
@@ -151,6 +153,7 @@ class SimulatedNetworkEnv(gym.Env):
 
         for i in range(len(self.net.links)):
             new_link = new_net.links[i]
+            print("Updating parameters", new_link.bw)
             self.net.links[i].update_parameters(new_link.bw,
                                                 new_link.delay,
                                                 new_link.queue_size,
@@ -161,8 +164,11 @@ class SimulatedNetworkEnv(gym.Env):
             self.next_network_id = 0
 
         lat = np.max([link.delay for link in self.net.links])
-        self.run_dur = 3 * lat
         
+        self.run_dur = 3 * lat
+
+        print("Using next network", self.net)
+
     def reset(self, use_next_network=False):
         self.steps_taken = 0
         if use_next_network:

@@ -34,20 +34,19 @@ from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
-import src.gym.simulate_network.single_sender_network
+from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
+
 def get_network(senders: [Sender], bw: int):
     #  Create two random identical links
     link1 = Link.generate_random_link()
     link1.bw = bw
-    link2 = Link(bw, link1.delay, link1.queue_delay, link1.loss_rate)
-
-    links = [link1, link2]
+    links = [link1]
 
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
@@ -59,43 +58,43 @@ senders = [
         random.uniform(0.3, 1.5) * bws[0],
         None, 0, features.split(","),
         history_len=history_len
-    ),
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
     )
 ]
 
 import matplotlib.pyplot as plt
 
 networks = [get_network(senders, bw) for bw in bws]
+gamma = arg_or_default("--gamma", default=0.99)
+output = arg_or_default("--output", default=".")
 
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+# env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+env = SingleSenderNetwork()
 model = PPO1.load("./pcc_model_23", env)
-model2 = PPO1.load("./pcc_model_23", env)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
+from tqdm import tqdm
+
+pbar = tqdm(total=5000)
 
 plt.figure()
 plt.legend()
 
-obs = env.reset()
-for i in range(1600 * 410):
-    action, _states = model.predict(obs[0])
-    action2, _states = model2.predict(obs[1])
-    obs, rewards, dones, info = env.step(action + action2)
+obs = env.reset(False)
+for i in range(5000):
+    action, _states = model.predict(obs)
+    obs, rewards, dones, info = env.step(action)
 
-    event = info[0]["Events"][-1]
+    inf = info["Events"]
+
+    event = inf[-1]
 
     if i > 0 and i % 400 == 0:
-        obs = env.reset()
-        times = [event["Time"] for event in info[0]["Events"][-501:]]
-        throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
-        optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
+        times = [event["Time"] for event in inf[-501:]]
+        throu = [event["Throughput"] for event in inf[-500:]]
+        optim = [8*event["Optimal"] for event in inf[-501:]]
         plt.plot(times[:500], throu, "r-", label="Throughput")
         plt.plot(times, optim, "b--", label="Optimal")
         plt.draw()
@@ -103,9 +102,12 @@ for i in range(1600 * 410):
 
     if i > 0 and i % 2500 == 0:
         obs = env.reset(True)
+        pbar.update(2500)
 
 
     env.render()
+
+plt.show()
 
 ##
 #   Save the model to the location specified below.
