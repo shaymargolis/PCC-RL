@@ -173,6 +173,10 @@ class SimulatedNetworkEnv(gym.Env):
         self.steps_taken = 0
         if use_next_network:
             self.use_next_network()
+            #  Run the network for a while
+            self.step([0] * len(self.senders))
+            self.step([0] * len(self.senders))
+            self.step([0] * len(self.senders))
         else:
             self.create_new_links_and_senders()
 
