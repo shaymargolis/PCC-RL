@@ -76,11 +76,11 @@ pbar = tqdm(total=TIMES / 100)
 obs = env.reset()
 rewards = [0, 0]
 for i in range(TIMES):
-    # env.senders[0].set_rate(205)
-    action = model.predict(rewards[0])
-    env.senders[0].set_rate(action)
+    env.senders[0].set_rate(1000)
+    #action = model.predict(obs[0], rewards[0])
+    #env.senders[0].set_rate(action)
 
-    #action = model2.predict(rewards[0])
+    #action = model2.predict(obs[0], rewards[0])
     #env.senders[1].set_rate(action)
     #env.senders[0].set_rate(int(250-i/2000*250))
     #env.senders[0].set_rate(i / 5000 * 220)

@@ -117,8 +117,8 @@ obs = env.reset()
 rewards = [0, 0, 0]
 for i in range(1600 * 410):
     #env.senders[0].set_rate(200)
-    action = model.predict(rewards[0])
-    action2 = model2.predict(rewards[1])
+    action = model.predict(obs[0], rewards[0])
+    action2 = model2.predict(obs[1], rewards[1])
     # action3 = model3.predict(rewards[2])
 
     # print("[Step %d] actions are" % i, action, action2)

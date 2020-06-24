@@ -50,9 +50,9 @@ class NoRegretAgent:
 
         return action
 
-    def predict(self, observation: float):
+    def predict(self, observation: np.array, reward: float):
         #  Update action according to observation
-        gradient = self.last_direction_choice * observation / self.delta
+        gradient = self.last_direction_choice * reward / self.delta
         self.action = self.project_action(self.action + self.mu * gradient)
 
         self.update_gradient_ascent_speed()
