@@ -66,7 +66,7 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
 
         # # self.senders[0].set_rate(float(rate))
 
-    def reset(self, next_network: bool = False):
+    def reset(self, next_network: bool = True):
         if next_network:
             net, rate = self.generate_random_network()
             self.networks = [net]

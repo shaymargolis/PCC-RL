@@ -9,11 +9,11 @@ class Link:
 
     @staticmethod
     def get_lat_limits():
-        return (0.08, 0.1)
+        return (0.1, 0.7)
 
     @staticmethod
     def get_queue_limits():
-        return (5, 7)
+        return (2, 7)
 
     @staticmethod
     def get_loss_limits():

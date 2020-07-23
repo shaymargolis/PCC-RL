@@ -273,7 +273,7 @@ class Sender:
         # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
 
         # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward * REWARD_SCALE, latency
+        return reward, latency
 
     def __le__(self, other):
         return self.id <= other.id

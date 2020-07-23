@@ -110,7 +110,7 @@ class SimulatedNetworkEnv(gym.Env):
         self.steps_taken += 1
         self.total_steps_taken += 1
 
-        self.run_dur = np.min([sender.add_event(self.total_steps_taken, self.run_dur) for sender in self.senders]),
+        self.run_dur = np.min([sender.add_event(self.total_steps_taken, self.run_dur) for sender in self.senders])
 
         info_n = [sender.event_record for sender in self.senders]
 
@@ -174,9 +174,8 @@ class SimulatedNetworkEnv(gym.Env):
         if use_next_network:
             self.use_next_network()
             #  Run the network for a while
-            self.step([0] * len(self.senders))
-            self.step([0] * len(self.senders))
-            self.step([0] * len(self.senders))
+            for i in range(3):
+                self.net.run_for_dur(self.run_dur)
         else:
             self.create_new_links_and_senders()
 

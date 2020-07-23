@@ -30,7 +30,6 @@ class Network():
         return self.cur_time
 
     def run_for_dur(self, dur):
-        # print("running for dur", self.cur_time, dur)
         end_time = self.cur_time + dur
         for sender in self.senders:
             sender.reset_obs()
