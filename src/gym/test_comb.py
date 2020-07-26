@@ -43,14 +43,14 @@ features = "sent latency inflation," + "latency ratio," + "send ratio"
 
 def get_network(senders: [Sender], bw: int):
     #  Create two random identical links
-    link1 = Link.generate_random_link()
-    link1.bw = bw
+    # link1 = Link.generate_random_link()
+    link1 = Link(bw, 0.2, 6, 0)
     links = [link1]
 
     #  Init the SimulatedNetwork using the parameters
     return Network(senders, links)
 
-bws = [200, 300] # [200, 300, 200, 300]
+bws = [100, 100, 300, 300] # [200, 300, 200, 300]
 
 senders = [
     Sender(
@@ -66,7 +66,7 @@ networks = [get_network(senders, bw) for bw in bws]
 
 env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
 model = NoRegretCombiningPolicy(
-    AuroraPolicy("./pcc_model_36", env),
+    AuroraPolicy("./cyclic4_model_17", env),
     NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 
@@ -114,7 +114,7 @@ for i in range(TIMES):
     #if i > 0 and i % 5500 == 0:
     #    model.faster_learning_rate()
 
-    if i > 0 and i % 5000 == 0:
+    if i > 0 and i % 400 == 0:
         obs = env.reset(True)
 
 

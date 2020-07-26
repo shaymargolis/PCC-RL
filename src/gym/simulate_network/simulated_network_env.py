@@ -37,6 +37,7 @@ class SimulatedNetworkEnv(gym.Env):
         self.networks: [Network] = networks
         self.senders: [Sender] = senders
         self.net: Network = None
+        self.init_default_network()
         self.next_network_id = 0
         self.use_next_network()
 		
@@ -128,7 +129,16 @@ class SimulatedNetworkEnv(gym.Env):
     def create_new_links_and_senders(self):
         lat = np.max([link.delay for link in self.net.links])
         self.run_dur = 5 * lat
-    
+
+    def init_default_network(self):
+        self.net = Network(self.senders, [Link.generate_random_link()])
+
+        for sender in self.senders:
+            sender.path = self.net.links
+            sender.register_network(self.net)
+
+        self.net.reset()
+
     def use_next_network(self):
         """self.net = self.networks[self.next_network_id]
         self.net.senders = self.senders
@@ -140,16 +150,6 @@ class SimulatedNetworkEnv(gym.Env):
         self.net.reset()"""
 
         new_net = self.networks[self.next_network_id]
-
-        if self.net is None:
-            self.net = new_net
-            self.net.senders = self.senders
-
-            for sender in self.senders:
-                sender.path = self.net.links
-                sender.register_network(self.net)
-
-            self.net.reset()
 
         for i in range(len(self.net.links)):
             new_link = new_net.links[i]
