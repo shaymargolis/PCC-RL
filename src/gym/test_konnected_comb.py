@@ -30,44 +30,34 @@ from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.sender import Sender
 
-from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
+from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
 
-import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 from src.gym.aurora_policy.aurora_policy import AuroraPolicy
-from src.gym.no_regret_policy.no_regret_combining_policy import NoRegretCombiningPolicy
+from src.gym.no_regret_policy.no_regret_combining_connected_policy import NoRegretCombiningConnectPolicy
+from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
-history_len = 10
-features = "sent latency inflation," + "latency ratio," + "send ratio"
+bws = [100, 240] # [200, 300, 200, 300]
+index = 0
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    # link1 = Link.generate_random_link()
-    link1 = Link(bw, 0.2, 6, 0)
-    links = [link1]
+def get_network():
+    global index
 
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
 
-bws = [100, 300] # [200, 300, 200, 300]
+        yield links
+        index = 1 - index
 
-senders = [
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    )
-]
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretCombiningPolicy(
+env = SingleSenderNetwork(get_network())
+model = NoRegretCombiningConnectPolicy(
     AuroraPolicy("./cyclic4_model_17", env),
-    NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
@@ -80,11 +70,13 @@ TIMES = 10000
 
 pbar = tqdm(total=TIMES / 100)
 
+significance = []
+
 obs = env.reset()
-rewards = [0, 0]
+reward = 0
 for i in range(TIMES):
     #env.senders[0].set_rate(40)
-    action = model.predict(obs[0], rewards[0])
+    action = model.predict(obs, reward)
     env.senders[0].set_rate(action)
 
     #action = model2.predict(obs[0], rewards[0])
@@ -93,15 +85,17 @@ for i in range(TIMES):
     #env.senders[0].set_rate(i / 5000 * 220)
     #env.senders[0].set_rate(210)
     # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
-    obs, rewards, dones, info = env.step([0])
+    obs, reward, dones, info = env.step([0])
+
+    significance.append(model.calculate_proba()[:])
 
     # if i > 0 and i % 400 == 0:
-    #     event = info[0]["Events"][-1]
+    #     event = info["Events"][-1]
     #     obs = env.reset()
-    #     times = [event["Time"] for event in info[0]["Events"][-501:]]
-    #     send = [event["Send Rate"] for event in info[0]["Events"][-500:]]
-    #     throu = [event["Throughput"] for event in info[0]["Events"][-500:]]
-    #     optim = [8*event["Optimal"] for event in info[0]["Events"][-501:]]
+    #     times = [event["Time"] for event in info["Events"][-501:]]
+    #     send = [event["Send Rate"] for event in info["Events"][-500:]]
+    #     throu = [event["Throughput"] for event in info["Events"][-500:]]
+    #     optim = [8*event["Optimal"] for event in info["Events"][-501:]]
     #     plt.plot(times[:500], throu, "g.", label="Throughput")
     #     plt.plot(times[:500], send, "r.", label="Send rate")
     #     plt.plot(times, optim, "b--", label="Optimal")
@@ -126,14 +120,14 @@ for i in range(TIMES):
 
 fig, ax = plt.subplots(nrows=3, ncols=2)
 
-times = [event["Time"] for event in info[0]["Events"]]
-send = [event["Send Rate"] for event in info[0]["Events"]]
-throu = [event["Throughput"] for event in info[0]["Events"]]
-optim = [8*event["Optimal"] for event in info[0]["Events"]]
-latency = [event["Latency Gradient"] for event in info[0]["Events"]]
-lat = [event["Latency"] for event in info[0]["Events"]]
-loss = [event["Loss Rate"] for event in info[0]["Events"]]
-reward = [event["Reward"] for event in info[0]["Events"]]
+times = [event["Time"] for event in info["Events"]]
+send = [event["Send Rate"] for event in info["Events"]]
+throu = [event["Throughput"] for event in info["Events"]]
+optim = [8*event["Optimal"] for event in info["Events"]]
+latency = [event["Latency Gradient"] for event in info["Events"]]
+lat = [event["Latency"] for event in info["Events"]]
+loss = [event["Loss Rate"] for event in info["Events"]]
+reward = [event["Reward"] for event in info["Events"]]
 ax[0][0].title.set_text("Sending rate")
 ax[0][0].plot(times, throu, "g.", label="Throughput")
 ax[0][0].plot(times, send, "r-", label="Send rate")
@@ -141,13 +135,14 @@ ax[0][0].plot(times, optim, "b--", label="Optimal")
 ax[0][0].legend()
 ax[0][0].grid()
 
-ax[0][1].title.set_text("Latency Gradient")
-ax[0][1].plot(times, latency, "r.", label="Latency Gradient")
+ax[0][1].title.set_text("Reward")
+ax[0][1].plot(times, reward, "b.", label="Reward")
 ax[0][1].legend()
 ax[0][1].grid()
 
-ax[1][0].title.set_text("Reward")
-ax[1][0].plot(times, reward, "b.", label="Reward")
+ax[1][0].title.set_text("Significance")
+ax[1][0].plot(times, list(map(lambda x: x[0], significance)), "b-", label="Aurora Sig")
+ax[1][0].plot(times, list(map(lambda x: x[1], significance)), "g-", label="OGD Sig")
 ax[1][0].legend()
 ax[1][0].grid()
 
@@ -158,7 +153,7 @@ ax[1][1].grid()
 
 ax[2][0].title.set_text("Latency")
 ax[2][0].plot(times, lat, "b.", label="Latency")
-ax[2][0].plot(times, np.ones(len(times)) * networks[0].links[0].delay, "r--", label="Link latency")
+ax[2][0].plot(times, np.ones(len(times)) * env.net.links[0].delay, "r--", label="Link latency")
 ax[2][0].legend()
 ax[2][0].grid()
 

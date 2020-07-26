@@ -1,3 +1,5 @@
+from typing import Generator, List
+
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -19,7 +21,7 @@ from src.gym.simulate_network.constants import *
 class SimulatedNetworkEnv(gym.Env):
     def __init__(self,
                  senders: [Sender],
-                 networks: [Network],
+                 network_generator: Generator[List[Link], None, None],
                  output=".",
                  history_len=arg_or_default("--history-len", default=10),
                  features=arg_or_default("--input-features",
@@ -34,11 +36,10 @@ class SimulatedNetworkEnv(gym.Env):
         print("Features: %s" % str(self.features))
 		
         self.output = output
-        self.networks: [Network] = networks
+        self.network_generator: Generator[List[Link], None, None] = network_generator
         self.senders: [Sender] = senders
         self.net: Network = None
         self.init_default_network()
-        self.next_network_id = 0
         self.use_next_network()
 		
         self.run_dur = None
@@ -140,28 +141,15 @@ class SimulatedNetworkEnv(gym.Env):
         self.net.reset()
 
     def use_next_network(self):
-        """self.net = self.networks[self.next_network_id]
-        self.net.senders = self.senders
+        new_links: List[Link] = next(self.network_generator)
 
-        for sender in self.senders:
-            sender.path = self.net.links
-            sender.register_network(self.net)
-
-        self.net.reset()"""
-
-        new_net = self.networks[self.next_network_id]
-
-        for i in range(len(self.net.links)):
-            new_link = new_net.links[i]
+        for i in range(len(new_links)):
+            new_link = new_links[i]
             print("Updating parameters", new_link.bw)
             self.net.links[i].update_parameters(new_link.bw,
                                                 new_link.delay,
                                                 new_link.queue_size,
                                                 new_link.loss_rate)
-
-        self.next_network_id += 1
-        if self.next_network_id >= len(self.networks):
-            self.next_network_id = 0
 
         lat = np.max([link.delay for link in self.net.links])
         
@@ -198,6 +186,3 @@ class SimulatedNetworkEnv(gym.Env):
     def dump_events_to_file(self, filename_start):
         for sender in self.senders:
             sender.dump_events_to_file(filename_start)
-
-
-# register(id='PccNs-v1', entry_point='simulate_network:simulated_network_env:SimulatedNetworkEnv')

@@ -2,22 +2,28 @@ import math
 import numpy as np
 from src.gym.aurora_policy.aurora_policy import AuroraPolicy
 from src.gym.no_regret_policy.agent import Agent
+from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 
 
-class NoRegretCombiningPolicy(Agent):
+class NoRegretCombiningConnectPolicy(Agent):
     MIN_PROBA_THRESH = 0.001
 
-    def __init__(self, aurora_policy: AuroraPolicy, no_regret_policy: NoRegretAgent):
+    def __init__(self, aurora_policy: AuroraPolicy, gradient_calculating_agent: GradientCalculatingAgent):
         super().__init__()
+
+        self.gradient_calculating_agent = gradient_calculating_agent
+
+        no_regret_advisor = NoRegretAgent(gradient_calculating_agent)
 
         self.agents: [Agent] = [
             aurora_policy,
-            no_regret_policy
+            no_regret_advisor
         ]
 
         self.weights: np.array = None
         self.mu = None
+        self.delta = None
         self.T = None
         self.selected_index = None
         self.actions = None
@@ -29,10 +35,11 @@ class NoRegretCombiningPolicy(Agent):
         self.reset()
 
     def reset(self):
-        self.actions = None
+        self.actions = [0, 0]
         self.selected_index = 0
         self.weights = np.array([0, 0], dtype=np.int64)
         self.mu = 0
+        self.delta = 0
         self.T = 0
 
     def update_parameters(self):
@@ -47,26 +54,28 @@ class NoRegretCombiningPolicy(Agent):
     def calculate_proba(self):
         proba = np.exp(self.mu * self.weights) / np.sum(np.exp(self.mu * self.weights))
 
-        proba *= (1 - NoRegretCombiningPolicy.MIN_PROBA_THRESH)
-        proba += 0.5 * NoRegretCombiningPolicy.MIN_PROBA_THRESH
+        proba *= (1 - NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH)
+        proba += 0.5 * NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH
         return proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):
         self.weights[chosen_index] += reward / 1000 / proba
 
     def predict(self, observation: np.array, reward: float):
-        #  Step 0 - Initialize actions
-        if self.T == 0:
-            self.actions = [agent.predict(observation, reward) for agent in self.agents]
+        #  Step 0 - Update both agents
+        for agent in self.agents:
+            agent.action = self.gradient_calculating_agent.action
 
-        #  Step 1 - Reward the chosen one
+        #  Step 1 - Calculate next move and reward the chosen one
+        self.actions = [agent.predict(observation, reward) for agent in self.agents]
+
         if self.T != 0:
-            self.actions[self.selected_index] = self.agents[self.selected_index].predict(observation, reward)
             self.update_weights(self.selected_index, self.calculate_proba()[self.selected_index], reward)
 
         self.update_parameters()
 
         #  Step 2 - Choose next agent
         self.selected_index = np.random.choice(self.N, 1, p=self.calculate_proba())[0]
+        self.gradient_calculating_agent.action = self.actions[self.selected_index]
 
-        return self.actions[self.selected_index]
+        return self.gradient_calculating_agent.predict(observation, reward)

@@ -31,25 +31,30 @@ from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
+from src.gym.aurora_policy.aurora_policy import AuroraPolicy
+from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
+from src.gym.no_regret_policy.no_regret_combining_connected_policy import NoRegretCombiningConnectPolicy
+
+
 import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
-from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    link1 = Link.generate_random_link()
-    link1.bw = bw
+bws = [100, 240] # [200, 300, 200, 300]
+index = 0
 
-    links = [link1]
+def get_network():
+    global index
 
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
 
-bws = [200]
+        yield links
+        index = 1 - index
 
 senders = [
     Sender(
@@ -67,12 +72,20 @@ senders = [
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
+env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))
-model2 = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))
-model3 = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))
+model = NoRegretCombiningConnectPolicy(
+    AuroraPolicy("./cyclic4_model_17", env),
+    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+)
+model2 = NoRegretCombiningConnectPolicy(
+    AuroraPolicy("./cyclic4_model_17", env),
+    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+)
+model3 = NoRegretCombiningConnectPolicy(
+    AuroraPolicy("./cyclic4_model_17", env),
+    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]

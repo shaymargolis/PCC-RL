@@ -225,7 +225,7 @@ class Sender:
         throughput = sender_mi.get("recv rate")
         sent = sender_mi.get("send rate")
         latency = sender_mi.get("avg latency")
-        # grad_latency = sender_mi.get("grad latency")
+        grad_latency = sender_mi.get("grad latency")
         loss = sender_mi.get("loss ratio")
         bw_cutoff = self.path[0].bw * 0.8
         lat_cutoff = 2.0 * self.path[0].delay * 1.5
@@ -237,8 +237,8 @@ class Sender:
         # reward = REWARD_SCALE * (20.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
 
         #  AURORA THROUGHPUT
-        reward = (10.0 * throughput / (8 * BYTES_PER_PACKET) - 1e3 * latency - 2e3 * loss)
-        return reward * REWARD_SCALE, latency
+        #reward = (10.0 * throughput / (8 * BYTES_PER_PACKET) - 1e3 * latency - 2e3 * loss)
+        #return reward * REWARD_SCALE, latency
 
         # VIVACE TRHOUGHPUT
         # x = 10 * throughput / (8 * BYTES_PER_PACKET)

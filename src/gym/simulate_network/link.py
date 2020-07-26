@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 import numpy as np
 
@@ -20,7 +21,7 @@ class Link:
         return (0.0, 0.0)
 
     @staticmethod
-    def generate_random_link():
+    def generate_random_link() -> Link:
         min_bw, max_bw = Link.get_bw_limits()
         min_lat, max_lat = Link.get_lat_limits()
         min_queue, max_queue = Link.get_queue_limits()
@@ -31,6 +32,11 @@ class Link:
         queue = 1 + int(np.power(2, random.uniform(min_queue, max_queue)))
         loss = random.uniform(min_loss, max_loss)
 
+        return Link(bw, lat, queue, loss)
+
+    @staticmethod
+    def generate_link(bw, lat, queue, loss) -> Link:
+        queue = 1 + int(np.power(2, queue))
         return Link(bw, lat, queue, loss)
 
     def __init__(self, bandwidth, delay, queue_size, loss_rate):

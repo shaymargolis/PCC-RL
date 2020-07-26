@@ -14,11 +14,6 @@
 import random
 import re
 
-import gym
-import tensorflow as tf
-
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common.policies import FeedForwardPolicy
 from stable_baselines import PPO1
 import os
 import sys
@@ -31,12 +26,8 @@ pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
 
 from src.gym.simulate_network.link import Link
-from src.gym.simulate_network.network import Network
-from src.gym.simulate_network.sender import Sender
+from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
 
-from src.gym.simulate_network.single_sender_repeated_network import SingleSenderRepeatedNetwork
-
-import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 
@@ -50,27 +41,20 @@ output = arg_or_default("--output", default=".")
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    link1 = Link(bw, 0.2, 6, 0)
-    links = [link1]
+bws = [100, 240]
+index = 0
 
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
+def get_network():
+    global index
 
-bws = [100, 100, 300, 300]
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
 
-senders = [
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    )
-]
+        yield links
+        index = 1 - index
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SingleSenderRepeatedNetwork(senders, networks, history_len=history_len, features=features, output=output)
+env = SingleSenderNetwork(get_network(), output=output)
 
 print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)
