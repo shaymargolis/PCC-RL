@@ -39,17 +39,20 @@ from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculat
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    link1 = Link.generate_random_link()
-    link1.bw = bw
-
-    links = [link1]
-
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
-
 bws = [200]
+index = 0
+
+def get_network():
+    global index
+
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
+
+        yield links
+        index += 1
+        if index >= len(bws):
+            index = 0
 
 senders = [
     Sender(
@@ -67,9 +70,7 @@ senders = [
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 model = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))
 model2 = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))
 model3 = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=8))

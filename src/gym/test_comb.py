@@ -31,6 +31,7 @@ from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
+from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
 import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
@@ -41,16 +42,18 @@ from src.gym.no_regret_policy.no_regret_combining_policy import NoRegretCombinin
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    # link1 = Link.generate_random_link()
-    link1 = Link(bw, 0.2, 6, 0)
-    links = [link1]
+bws = [100, 240] # [200, 300, 200, 300]
+index = 0
 
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
+def get_network():
+    global index
 
-bws = [100, 300] # [200, 300, 200, 300]
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
+
+        yield links
+        index = 1 - index
 
 senders = [
     Sender(
@@ -62,12 +65,10 @@ senders = [
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 model = NoRegretCombiningPolicy(
     AuroraPolicy("./cyclic4_model_17", env),
-    NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+    NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2))
 )
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
@@ -158,7 +159,7 @@ ax[1][1].grid()
 
 ax[2][0].title.set_text("Latency")
 ax[2][0].plot(times, lat, "b.", label="Latency")
-ax[2][0].plot(times, np.ones(len(times)) * networks[0].links[0].delay, "r--", label="Link latency")
+ax[2][0].plot(times, np.ones(len(times)) * env.net.links[0].delay, "r--", label="Link latency")
 ax[2][0].legend()
 ax[2][0].grid()
 

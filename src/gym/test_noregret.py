@@ -19,6 +19,8 @@ import sys
 import inspect
 from tqdm import tqdm
 import numpy as np
+
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
@@ -29,6 +31,7 @@ from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
+from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
 import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
@@ -37,16 +40,20 @@ from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    link1 = Link.generate_random_link()
-    link1.bw = bw
-    links = [link1]
-
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
-
 bws = [200, 300, 200, 300]
+index = 0
+
+def get_network():
+    global index
+
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
+
+        yield links
+        index += 1
+        if index >= len(bws):
+            index = 0
 
 senders = [
     Sender(
@@ -58,10 +65,8 @@ senders = [
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
+model = NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2))
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -69,14 +74,14 @@ model = NoRegretAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
-TIMES = 51000
+TIMES = 10000 # 51000
 
 pbar = tqdm(total=TIMES / 100)
 
 obs = env.reset()
 rewards = [0, 0]
 for i in range(TIMES):
-    env.senders[0].set_rate(1000)
+    env.senders[0].set_rate(model.predict(obs[0], rewards[0]))
     #action = model.predict(obs[0], rewards[0])
     #env.senders[0].set_rate(action)
 
@@ -105,7 +110,7 @@ for i in range(TIMES):
     #         sender.reset_events()
 
     if i > 0 and i % 5500 == 0:
-        model.faster_learning_rate()
+        model.gradient_calculating.faster_learning_rate()
 
     if i > 0 and i % 10000 == 0:
         obs = env.reset(True)
@@ -151,7 +156,7 @@ ax[1][1].grid()
 
 ax[2][0].title.set_text("Latency")
 ax[2][0].plot(times, lat, "b.", label="Latency")
-ax[2][0].plot(times, np.ones(len(times)) * networks[0].links[0].delay, "r--", label="Link latency")
+ax[2][0].plot(times, np.ones(len(times)) * env.net.links[0].delay, "r--", label="Link latency")
 ax[2][0].legend()
 ax[2][0].grid()
 

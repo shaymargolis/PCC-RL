@@ -41,18 +41,20 @@ from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-def get_network(senders: [Sender], bw: int):
-    #  Create two random identical links
-    link1 = Link.generate_random_link()
-    link1.bw = bw
-    link2 = Link(bw, link1.delay, link1.queue_delay, link1.loss_rate)
+bws = [200, 200, 300, 200, 100, 300, 200] # [200, 300, 200, 300]
+index = 0
 
-    links = [link1, link2]
+def get_network():
+    global index
 
-    #  Init the SimulatedNetwork using the parameters
-    return Network(senders, links)
+    while True:
+        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        links = [link1]
 
-bws = [200, 200, 300, 200, 100, 300, 200]
+        yield links
+        index += 1
+        if index >= len(bws):
+            index = 0
 
 senders = [
     Sender(
@@ -79,9 +81,7 @@ senders = [
 
 import matplotlib.pyplot as plt
 
-networks = [get_network(senders, bw) for bw in bws]
-
-env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
+env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 model = PPO1.load("./pcc_model_23", env)
 model2 = PPO1.load("./pcc_model_23", env)
 model3 = PPO1.load("./pcc_model_23", env)

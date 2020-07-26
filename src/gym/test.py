@@ -34,7 +34,7 @@ from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
-from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
+from src.gym.simulate_network.single_sender_random_network import SingleSenderRandomNetwork
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
 
@@ -68,7 +68,7 @@ gamma = arg_or_default("--gamma", default=0.99)
 output = arg_or_default("--output", default=".")
 
 # env = SimulatedNetworkEnv(senders, networks, history_len=history_len, features=features)
-env = SingleSenderNetwork()
+env = SingleSenderRandomNetwork()
 model = PPO1.load("./pcc_model_23", env)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]

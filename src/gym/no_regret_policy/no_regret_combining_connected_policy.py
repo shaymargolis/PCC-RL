@@ -5,6 +5,15 @@ from src.gym.no_regret_policy.agent import Agent
 from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 
+class NoRegretAdvisor:
+    def __init__(self, gradient_calculating_agent: GradientCalculatingAgent):
+        self.gradient_calculating = gradient_calculating_agent
+        self.action = None
+
+    def predict(self, observation: np.array, reward: float):
+        #  Update action according to observation
+        gradient = self.gradient_calculating.get_gradient_estimate(reward)
+        return self.gradient_calculating.project_action(self.gradient_calculating.action + self.gradient_calculating.mu * gradient)
 
 class NoRegretCombiningConnectPolicy(Agent):
     MIN_PROBA_THRESH = 0.001
@@ -14,7 +23,7 @@ class NoRegretCombiningConnectPolicy(Agent):
 
         self.gradient_calculating_agent = gradient_calculating_agent
 
-        no_regret_advisor = NoRegretAgent(gradient_calculating_agent)
+        no_regret_advisor = NoRegretAdvisor(gradient_calculating_agent)
 
         self.agents: [Agent] = [
             aurora_policy,
@@ -56,6 +65,8 @@ class NoRegretCombiningConnectPolicy(Agent):
 
         proba *= (1 - NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH)
         proba += 0.5 * NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH
+
+        return [0, 1]
         return proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):
