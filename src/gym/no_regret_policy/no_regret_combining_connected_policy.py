@@ -16,7 +16,7 @@ class NoRegretAdvisor:
         return self.gradient_calculating.project_action(self.gradient_calculating.action + self.gradient_calculating.mu * gradient)
 
 class NoRegretCombiningConnectPolicy(Agent):
-    MIN_PROBA_THRESH = 0.001
+    MIN_PROBA_THRESH = 0.005
 
     def __init__(self, aurora_policy: AuroraPolicy, gradient_calculating_agent: GradientCalculatingAgent):
         super().__init__()
@@ -61,16 +61,16 @@ class NoRegretCombiningConnectPolicy(Agent):
         self.mu = math.sqrt(np.log(2) / self.T)
 
     def calculate_proba(self):
+        # return [0, 1]
         proba = np.exp(self.mu * self.weights) / np.sum(np.exp(self.mu * self.weights))
 
         proba *= (1 - NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH)
         proba += 0.5 * NoRegretCombiningConnectPolicy.MIN_PROBA_THRESH
 
-        return [0, 1]
         return proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):
-        self.weights[chosen_index] += reward / 1000 / proba
+        self.weights[chosen_index] += reward / 100 / proba
 
     def predict(self, observation: np.array, reward: float):
         #  Step 0 - Update both agents

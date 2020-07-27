@@ -38,7 +38,7 @@ from src.gym.aurora_policy.aurora_policy import AuroraPolicy
 from src.gym.no_regret_policy.no_regret_combining_connected_policy import NoRegretCombiningConnectPolicy
 from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
-bws = [100, 240] # [200, 300, 200, 300]
+bws = [100, 240] # [100, 240] # [200, 300, 200, 300]
 index = 0
 
 def get_network():
@@ -56,7 +56,7 @@ import matplotlib.pyplot as plt
 
 env = SingleSenderNetwork(get_network())
 model = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./cyclic4_model_17", env),
+    AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 

@@ -67,7 +67,7 @@ import matplotlib.pyplot as plt
 
 env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 model = NoRegretCombiningPolicy(
-    AuroraPolicy("./cyclic4_model_17", env),
+    AuroraPolicy("./rand_model_12", env),
     NoRegretAgent(GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2))
 )
 

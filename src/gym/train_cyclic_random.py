@@ -35,6 +35,7 @@ from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.sender import Sender
 
 from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
+from src.gym.simulate_network.reward.aurora_reward import AuroraReward
 
 import src.gym.simulate_network.single_sender_network
 from src.common.simple_arg_parse import arg_or_default
@@ -64,7 +65,7 @@ def get_network():
         yield links
         index = 1 - index
 
-env = SingleSenderNetwork(get_network(), output=output)
+env = SingleSenderNetwork(get_network(), output=output, reward=AuroraReward())
 
 print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)

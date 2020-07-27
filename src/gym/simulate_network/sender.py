@@ -4,11 +4,13 @@ from src.common import sender_obs, config
 from src.gym.simulate_network.constants import *
 from scipy.optimize import curve_fit
 
+from src.gym.simulate_network.reward.reward import Reward
+from src.gym.simulate_network.reward.vivace_loss_reward import VivaceLossReward
 
 BIG_NUMBER = 500
 
 class Sender:
-    def __init__(self, rate, path, dest, features, cwnd=25, history_len=10):
+    def __init__(self, rate, path, dest, features, cwnd=25, history_len=10, reward: Reward = VivaceLossReward()):
         """
         :param rate: Rate in MBps
         :param path:
@@ -41,6 +43,7 @@ class Sender:
         self.reward_sum = 0
         self.reward_ewma = 0
         self.last_latency = [0]
+        self.reward = reward
 
         self.cwnd = cwnd
 
@@ -222,62 +225,7 @@ class Sender:
 
     def get_reward(self):
         sender_mi = self.get_run_data()
-        throughput = sender_mi.get("recv rate")
-        sent = sender_mi.get("send rate")
-        latency = sender_mi.get("avg latency")
-        grad_latency = sender_mi.get("grad latency")
-        loss = sender_mi.get("loss ratio")
-        bw_cutoff = self.path[0].bw * 0.8
-        lat_cutoff = 2.0 * self.path[0].delay * 1.5
-        loss_cutoff = 2.0 * self.path[0].loss_rate * 1.5
-        # print("thpt %f, bw %f" % (throughput, bw_cutoff))
-        # reward = 0 if (loss > 0.1 or throughput < bw_cutoff or latency > lat_cutoff or loss > loss_cutoff) else 1 #
-
-        # Super high throughput
-        # reward = REWARD_SCALE * (20.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
-
-        #  AURORA THROUGHPUT
-        #reward = (10.0 * throughput / (8 * BYTES_PER_PACKET) - 1e3 * latency - 2e3 * loss)
-        #return reward * REWARD_SCALE, latency
-
-        # VIVACE TRHOUGHPUT
-        # x = 10 * throughput / (8 * BYTES_PER_PACKET)
-        # x = sent / (8 * BYTES_PER_PACKET)
-        x = self.rate
-
-        # Very high thpt
-        # self.last_latency = self.last_latency[-5:] + [latency]
-
-        #def linear_func(x, a, b):
-        #    return a*x + b
-
-        latency = grad_latency
-        #if len(self.last_latency) > 2:
-        #    popt, pcov = curve_fit(linear_func, range(len(self.last_latency[-4:])),
-        #                           self.last_latency[-4:])
-        #    latency = popt[0]
-
-        reward = (x - x * (900 * latency + 11 * loss))
-        # print("X", x, "LOSS", loss, "LAT", latency, "REWA", reward)
-
-        # if reward > 300:
-        #     return 300, latency
-        # if reward < -300:
-        #     return -300, latency
-
-        if not isinstance(reward, float):
-            print("NOOOOO")
-
-        # High thpt
-        # \reward = REWARD_SCALE * (5.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
-
-        # Low latency
-        # reward = REWARD_SCALE * (2.0 * throughput / RATE_OBS_SCALE - 1e3 * latency / LAT_OBS_SCALE - 2e3 * loss)
-        # if reward > 857:
-        # print("Reward = %f, thpt = %f, lat = %f, loss = %f" % (reward, throughput, latency, loss))
-
-        # reward = (throughput / RATE_OBS_SCALE) * np.exp(-1 * (LATENCY_PENALTY * latency / LAT_OBS_SCALE + LOSS_PENALTY * loss))
-        return reward, latency
+        return self.reward.get_reward(sender_mi, self.rate)
 
     def __le__(self, other):
         return self.id <= other.id

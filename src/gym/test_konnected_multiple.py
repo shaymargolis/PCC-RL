@@ -43,14 +43,16 @@ from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
 
-bws = [100, 240] # [200, 300, 200, 300]
+bws = [240, 240] # [200, 300, 200, 300]
 index = 0
 
 def get_network():
     global index
 
     while True:
-        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        # link1 = Link.generate_link(bws[index], 0.2, 6, 0)
+        link1 = Link.generate_random_link()
+        link1.bw = bws[index]
         links = [link1]
 
         yield links
@@ -75,15 +77,15 @@ import matplotlib.pyplot as plt
 env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 
 model = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./cyclic4_model_17", env),
+    AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 model2 = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./cyclic4_model_17", env),
+    AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 model3 = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./cyclic4_model_17", env),
+    AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 
@@ -92,9 +94,17 @@ model3 = NoRegretCombiningConnectPolicy(
 #optimal_data = [float(event["Optimal"]) for event in data["Optimal"][1:]]
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
-fig, axes = plt.subplots(2, figsize=(10, 12))
-senders_axis = axes[0]
-sender_ewma_axis = axes[1]
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 12))
+senders_axis = axes[0][0]
+sender_ewma_axis = axes[1][0]
+sender1_sig_axis = axes[0][1]
+sender2_sig_axis = axes[1][1]
+
+senders_axis.title.set_text("Sending Rate")
+sender_ewma_axis.title.set_text("Reward")
+sender1_sig_axis.title.set_text("Sender 1 Sig")
+sender2_sig_axis.title.set_text("Sender 2 Sig")
+
 
 def plot_axis(axis, events_arr):
     colors = [('r', 'g'), ('b', 'm'), ('k', 'y')]
@@ -127,6 +137,21 @@ def plot_ewma(axis, event_arr):
 
         i += 1
 
+legend_drawn = [False, False]
+
+def plot_sender_sig(axis, i, event_arr, sig_arr):
+    times = [event["Time"] for event in event_arr[i][-500:]]
+
+    axis.plot(times, list(map(lambda x: x[0], sig_arr[-500:])), "b-", label="Aurora Sig")
+    axis.plot(times, list(map(lambda x: x[1], sig_arr[-500:])), "g-", label="OGD Sig")
+
+    if not legend_drawn[i]:
+        axis.legend()
+        legend_drawn[i] = True
+
+
+sender1_sig = []
+sender2_sig = []
 
 obs = env.reset()
 rewards = [0, 0, 0]
@@ -144,12 +169,18 @@ for i in range(1600 * 410):
 
     obs, rewards, dones, info = env.step([0, 0])
 
+    sender1_sig.append(model.calculate_proba()[:])
+    sender2_sig.append(model2.calculate_proba()[:])
+
     # print("[Step %d] rewards are" % i, rewards)
 
     if i > 0 and i % 400 == 0:
         obs = env.reset()
-        plot_axis(senders_axis, [x["Events"] for x in info])
-        plot_ewma(sender_ewma_axis, [x["Events"] for x in info])
+        event_arr = [x["Events"] for x in info]
+        plot_axis(senders_axis, event_arr)
+        plot_ewma(sender_ewma_axis, event_arr)
+        plot_sender_sig(sender1_sig_axis, 0, event_arr, sender1_sig)
+        plot_sender_sig(sender2_sig_axis, 1, event_arr, sender2_sig)
 
         if i == 400:
             senders_axis.legend()
@@ -158,7 +189,7 @@ for i in range(1600 * 410):
         plt.pause(0.1)
 
     if i > 0 and i % 10000 == 0:
-        obs = env.reset(True)
+         obs = env.reset(True)
 
 
     env.render()

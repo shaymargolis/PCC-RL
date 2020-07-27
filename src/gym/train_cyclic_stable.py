@@ -27,6 +27,7 @@ sys.path.insert(0,pparentdir)
 
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
+from src.gym.simulate_network.reward.aurora_reward import AuroraReward
 
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.simple_mlp_policy import SimpleMlpPolicy
@@ -54,7 +55,7 @@ def get_network():
         yield links
         index = 1 - index
 
-env = SingleSenderNetwork(get_network(), output=output)
+env = SingleSenderNetwork(get_network(), output=output, reward=AuroraReward())
 
 print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)
