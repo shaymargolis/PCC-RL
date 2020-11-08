@@ -35,7 +35,7 @@ from src.gym.simulate_network.single_sender_network import SingleSenderNetwork
 from src.common.simple_arg_parse import arg_or_default
 from src.gym.no_regret_policy.no_regret_policy import NoRegretAgent
 from src.gym.aurora_policy.aurora_policy import AuroraPolicy
-from src.gym.no_regret_policy.no_regret_combining_connected_policy import NoRegretCombiningConnectPolicy
+from src.gym.no_regret_policy.no_regret_combining_connected_long_policy import NoRegretCombiningConnectLongPolicy
 from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
 
 bws = [100, 240] # [100, 240] # [200, 300, 200, 300]
@@ -55,8 +55,8 @@ def get_network():
 import matplotlib.pyplot as plt
 
 env = SingleSenderNetwork(get_network())
-model = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./rand_model_12", env),
+model = NoRegretCombiningConnectLongPolicy(
+    AuroraPolicy("./rand_model_15", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
 
@@ -66,7 +66,7 @@ model = NoRegretCombiningConnectPolicy(
 #send_data = [float(event["Send Rate"]) for event in data["Events"][1:]]
 
 
-TIMES = 5000
+TIMES = 10000
 
 pbar = tqdm(total=TIMES / 100)
 

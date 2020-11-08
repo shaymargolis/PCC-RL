@@ -25,6 +25,11 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
+from src.gym.worker.aurora_worker import AuroraWorker
+from src.gym.worker.ogd_worker import OGDWorker
+from src.gym.worker.two_point_ogd_worker import TwoPointOGDWorker
+from src.gym.worker.combining_worker import CombiningWorker
+from src.gym.worker.worker_runner import WorkerRunner
 
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.network import Network
@@ -55,9 +60,14 @@ def get_network():
 import matplotlib.pyplot as plt
 
 env = SingleSenderNetwork(get_network())
-model = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./rand_model_12", env),
-    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+# model = AuroraWorker("./rand_model_12", env, (40, 300))
+model = CombiningWorker(
+    (40, 300),
+    env,
+    [
+        AuroraWorker("./rand_model_12", env, (40, 300)),
+        TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
+    ]
 )
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
@@ -74,10 +84,14 @@ significance = []
 
 obs = env.reset()
 reward = 0
+
+wr = WorkerRunner([model], obs, reward)
+
 for i in range(TIMES):
+    action = wr.start_step()
+
     #env.senders[0].set_rate(40)
-    action = model.predict(obs, reward)
-    env.senders[0].set_rate(action)
+    env.senders[0].set_rate(action[0])
 
     #action = model2.predict(obs[0], rewards[0])
     #env.senders[1].set_rate(action)
@@ -86,6 +100,8 @@ for i in range(TIMES):
     #env.senders[0].set_rate(210)
     # print("Sending rate %d Reward %f" % (env.senders[0].rate, rewards[0]))
     obs, reward, dones, info = env.step([0])
+
+    wr.finish_step([obs], [reward])
 
     significance.append(model.get_proba()[:])
 

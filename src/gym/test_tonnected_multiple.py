@@ -33,7 +33,7 @@ from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
 from src.gym.aurora_policy.aurora_policy import AuroraPolicy
 from src.gym.no_regret_policy.gradient_calculating_agent import GradientCalculatingAgent
-from src.gym.no_regret_policy.no_regret_combining_connected_policy import NoRegretCombiningConnectPolicy
+from src.gym.no_regret_policy.no_regret_combining_connected_long_policy import NoRegretCombiningConnectLongPolicy
 
 
 import src.gym.simulate_network.single_sender_network
@@ -76,15 +76,15 @@ import matplotlib.pyplot as plt
 
 env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 
-model = NoRegretCombiningConnectPolicy(
+model = NoRegretCombiningConnectLongPolicy(
     AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
-model2 = NoRegretCombiningConnectPolicy(
+model2 = NoRegretCombiningConnectLongPolicy(
     AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
-model3 = NoRegretCombiningConnectPolicy(
+model3 = NoRegretCombiningConnectLongPolicy(
     AuroraPolicy("./rand_model_12", env),
     GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
 )
@@ -159,7 +159,7 @@ for i in range(1600 * 410):
     #env.senders[0].set_rate(200)
     action = model.predict(obs[0], rewards[0])
     action2 = model2.predict(obs[1], rewards[1])
-    # action3 = model3.predict(rewards[2])
+    # action3 = model3.predict(obs[2], rewards[2])
 
     # print("[Step %d] actions are" % i, action, action2)
 

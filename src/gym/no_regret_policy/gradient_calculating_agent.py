@@ -35,7 +35,9 @@ class GradientCalculatingAgent(Agent):
         self.update_gradient_ascent_speed()
 
     def update_gradient_ascent_speed(self):
-        self.T += 1
+        if self.T < 100:
+            self.T += 1
+
         self.delta = np.sqrt( self.D * self.C / ((self.D + 2) * self.L * self.T ** (1/4) ))
         self.mu = (self.D * self.delta) / (self.C * self.T ** (1/2))
 

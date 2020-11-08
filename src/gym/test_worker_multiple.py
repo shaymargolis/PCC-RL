@@ -28,6 +28,11 @@ sys.path.insert(0,pparentdir)
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.sender import Sender
+from src.gym.worker.aurora_worker import AuroraWorker
+from src.gym.worker.ogd_worker import OGDWorker
+from src.gym.worker.two_point_ogd_worker import TwoPointOGDWorker
+from src.gym.worker.combining_worker import CombiningWorker
+from src.gym.worker.worker_runner import WorkerRunner
 
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
@@ -76,18 +81,26 @@ import matplotlib.pyplot as plt
 
 env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
 
-model = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./rand_model_12", env),
-    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+model = CombiningWorker(
+    (40, 300),
+    env,
+    [
+        AuroraWorker("./rand_model_12", env, (40, 300)),
+        TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
+    ]
 )
-model2 = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./rand_model_12", env),
-    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
+
+model2 = CombiningWorker(
+    (40, 300),
+    env,
+    [
+        AuroraWorker("./rand_model_12", env, (40, 300)),
+        TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
+    ]
 )
-model3 = NoRegretCombiningConnectPolicy(
-    AuroraPolicy("./rand_model_12", env),
-    GradientCalculatingAgent(actions_limits=(40, 300), C=11 * 300, L=2)
-)
+
+model.workers[1].set_action(50)
+model2.workers[1].set_action(50)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
 #rew_data = [float(event["Reward"]) for event in data["Events"][1:]]
@@ -154,23 +167,27 @@ sender1_sig = []
 sender2_sig = []
 
 obs = env.reset()
-rewards = [0, 0, 0]
+reward = 0
+
+wr = WorkerRunner([model, model2], obs, reward)
+
 for i in range(1600 * 410):
-    #env.senders[0].set_rate(200)
-    action = model.predict(obs[0], rewards[0])
-    action2 = model2.predict(obs[1], rewards[1])
-    # action3 = model3.predict(rewards[2])
+    actions = wr.start_step()
 
     # print("[Step %d] actions are" % i, action, action2)
 
-    env.senders[0].set_rate(action)
-    env.senders[1].set_rate(action2)
+    env.senders[0].set_rate(actions[0])
+    env.senders[1].set_rate(actions[1])
     # env.senders[2].set_rate(action3)
 
     obs, rewards, dones, info = env.step([0, 0])
 
+    wr.finish_step(obs, rewards)
+
     sender1_sig.append(model.get_proba()[:])
     sender2_sig.append(model2.get_proba()[:])
+    # sender1_sig.append([0.5, 0.25])
+    # sender2_sig.append([0.25, 0.5])
 
     # print("[Step %d] rewards are" % i, rewards)
 
