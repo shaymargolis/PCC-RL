@@ -37,6 +37,7 @@ class Visualizer:
             self.render_step(obs, reward, dones, info)
 
             if i > 0 and i % data_interval == 0:
+                obs = self.env.reset()
                 self.render_data(obs, reward, dones, info)
 
                 [sender.reset_event_record() for sender in self.env.net.senders]

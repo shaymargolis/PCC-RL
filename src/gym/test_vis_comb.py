@@ -30,7 +30,7 @@ from src.gym.worker.combining_worker import CombiningWorker
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.sender import Sender
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
-from src.gym.visualizer.single_sender_visualizer import BatchVisualizer
+from src.gym.visualizer.single_sender_visualizer import SingleSenderVisualizer
 
 history_len = 10
 features = "sent latency inflation," + "latency ratio," + "send ratio"
@@ -73,5 +73,5 @@ model = CombiningWorker(
 
 TIMES = 5000
 
-vis = BatchVisualizer(env, [model])
+vis = SingleSenderVisualizer(env, [model], 0)
 vis.steps(TIMES, 300, 100)

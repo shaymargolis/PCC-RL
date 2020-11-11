@@ -84,11 +84,11 @@ model2 = CombiningWorker(
     ]
 )
 
-model.set_action(40)
-model2.set_action(200)
+model.workers[1].set_action(200)
+model2.workers[1].set_action(50)
 
 
-TIMES = 10000
+TIMES = 5000
 
 vis = MultipleSenderVisualizer(env, [model, model2])
 vis.steps(TIMES, 5000, 100)
