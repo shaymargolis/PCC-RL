@@ -23,7 +23,7 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
                                          default="sent latency inflation,"
                                                  + "latency ratio,"
                                                  + "send ratio"),
-                 reward: Reward = VivaceLatencyReward()):
+                 reward: Reward = VivaceLossReward()):
         self.last_bw = None
 
         self.history_len = history_len

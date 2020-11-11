@@ -24,15 +24,15 @@ class TwoPointOGDWorker(Worker):
         self.set_action(40)
 
     def reset_learning_rate(self):
-        self.T = 500
+        self.T = 100
         self.update_gradient_ascent_speed()
 
     def update_gradient_ascent_speed(self):
-        if self.T < 50:
+        if self.T < 5000:
             self.T += 1
 
-        self.T += 1
-        self.delta = self.D / (self.T ** (1/2))
+        # self.T += 1
+        self.delta = 0.01
         self.mu = self.D / (self.L * self.T ** (1/2))
 
     def get_direction_randomly(self):
@@ -42,17 +42,17 @@ class TwoPointOGDWorker(Worker):
     def step(self, ds) -> float:
         direction = self.get_direction_randomly()
 
-        yield self.action*(1 + direction*0.01)
+        yield self.action*(1 + direction*self.delta)
         yield True
 
         _, reward0 = ds.data
 
-        yield self.action*(1 - direction*0.01)
+        yield self.action*(1 - direction*self.delta)
         yield True
 
         _, reward1 = ds.data
 
-        gradient = direction * (reward0 - reward1) / (2*0.01*self.action)
+        gradient = direction * (reward0 - reward1) / (2*self.action*self.delta)
 
         self.set_action(self.action + self.mu * gradient)
 

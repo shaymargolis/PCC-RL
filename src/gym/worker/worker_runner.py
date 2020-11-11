@@ -8,7 +8,7 @@ class WorkerRunner():
     def __init__(self, workers: list, obs_init, reward_init):
         self.workers = workers
 
-        self.ds = [DS(obs_init, reward_init), DS(obs_init, reward_init)]
+        self.ds = [DS(obs_init[i], reward_init[i]) for i in range(len(self.workers))]
         self.gen = [self.workers[i].step(self.ds[i]) for i in range(len(self.workers))]
 
     def get_next_rate(self, ind):

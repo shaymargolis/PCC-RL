@@ -171,7 +171,7 @@ sender2_sig = []
 obs = env.reset()
 reward = 0
 
-wr = WorkerRunner([model, model2], obs, reward)
+wr = WorkerRunner([model, model2], obs, [reward, reward])
 
 for i in range(1600 * 410):
     actions = wr.start_step()

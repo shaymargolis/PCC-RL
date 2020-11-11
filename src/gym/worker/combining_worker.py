@@ -11,7 +11,7 @@ def exp_normalize(x):
 
 
 class CombiningWorker(Worker):
-    MIN_PROBA_THRESH = 0.1
+    MIN_PROBA_THRESH = 0.01
 
     def __init__(self, action_limits, env, workers: list):
         super().__init__(env, action_limits)
@@ -58,7 +58,7 @@ class CombiningWorker(Worker):
         self.proba = proba
 
     def get_proba(self):
-        # return [1, 0]
+        # return [0, 1]
         return self.proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):

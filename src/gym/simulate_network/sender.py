@@ -49,6 +49,10 @@ class Sender:
 
     _next_id = 1
 
+    def reset_event_record(self):
+        self.event_record \
+            = {"Events": []}
+
     @staticmethod
     def _get_next_id():
         result = Sender._next_id

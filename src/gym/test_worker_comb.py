@@ -85,7 +85,7 @@ significance = []
 obs = env.reset()
 reward = 0
 
-wr = WorkerRunner([model], obs, reward)
+wr = WorkerRunner([model], [obs], [reward])
 
 for i in range(TIMES):
     action = wr.start_step()
@@ -124,7 +124,7 @@ for i in range(TIMES):
     #if i > 0 and i % 5500 == 0:
     #    model.faster_learning_rate()
 
-    if i > 0 and i % 2000 == 0:
+    if i > 0 and i % 400 == 0:
         obs = env.reset(True)
 
 
