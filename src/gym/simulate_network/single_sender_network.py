@@ -8,6 +8,7 @@ from src.common.simple_arg_parse import arg_or_default
 from src.gym.simulate_network.link import Link
 from src.gym.simulate_network.network import Network
 from src.gym.simulate_network.reward.reward import Reward
+from src.gym.simulate_network.reward.vivace_latency_reward import VivaceLatencyReward
 from src.gym.simulate_network.reward.vivace_loss_reward import VivaceLossReward
 from src.gym.simulate_network.sender import Sender
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
@@ -22,7 +23,7 @@ class SingleSenderNetwork(SimulatedNetworkEnv):
                                          default="sent latency inflation,"
                                                  + "latency ratio,"
                                                  + "send ratio"),
-                 reward: Reward = VivaceLossReward()):
+                 reward: Reward = VivaceLatencyReward()):
         self.last_bw = None
 
         self.history_len = history_len

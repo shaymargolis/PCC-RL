@@ -137,7 +137,7 @@ def _mi_metric_grad_latency(mi):
             popt, pcov = curve_fit(linear_func, mi.event_samples, mi.rtt_samples)
             a = popt[0]
 
-            if np.abs(a) < 0.01:
+            if np.abs(a) < 1:
                 return 0.0
 
             return a

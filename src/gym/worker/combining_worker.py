@@ -33,6 +33,7 @@ class CombiningWorker(Worker):
         self.e = 0.5
         self.delta = 0
         self.T = 0
+        self.T = 5000
 
     def update_parameters(self):
         if self.T < 100:
@@ -57,7 +58,7 @@ class CombiningWorker(Worker):
         self.proba = proba
 
     def get_proba(self):
-        return [0, 1]
+        # return [1, 0]
         return self.proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):

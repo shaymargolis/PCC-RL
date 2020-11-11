@@ -87,6 +87,7 @@ model = CombiningWorker(
     [
         AuroraWorker("./rand_model_12", env, (40, 300)),
         TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
+        # OGDWorker(env, (40, 300), C=11 * 300, L=2)
     ]
 )
 
@@ -96,10 +97,11 @@ model2 = CombiningWorker(
     [
         AuroraWorker("./rand_model_12", env, (40, 300)),
         TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
+        # OGDWorker(env, (40, 300), C=11 * 300, L=2)
     ]
 )
 
-model.workers[1].set_action(50)
+model.workers[1].set_action(200)
 model2.workers[1].set_action(50)
 
 #time_data = [float(event["Time"]) for event in data["Events"][1:]]
