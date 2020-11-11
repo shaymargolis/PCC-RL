@@ -83,4 +83,4 @@ class SingleSenderVisualizer(Visualizer):
         ax[2][0].legend()
         ax[2][0].grid()
 
-        plt.show()
+        return fig

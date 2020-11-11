@@ -68,7 +68,7 @@ class MultipleSenderVisualizer(Visualizer):
             sender3_sig_axis.title.set_text("Sender 3 Sig")
             self._plot_sender_sig(sender3_sig_axis, 2)
 
-        plt.show()
+        return fig
 
     def _plot_axis(self, axis):
         colors = [('r', 'g'), ('b', 'm'), ('k', 'y')]

@@ -11,60 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import random
 import os
 import sys
 import inspect
-from tqdm import tqdm
-
+import random
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
+
+from src.gym.network_creator import get_env
+
 from src.gym.worker.aurora_worker import AuroraWorker
 from src.gym.worker.ogd_worker import OGDWorker
 from src.gym.worker.two_point_ogd_worker import TwoPointOGDWorker
 from src.gym.worker.combining_worker import CombiningWorker
 
-from src.gym.simulate_network.link import Link
-from src.gym.simulate_network.sender import Sender
-from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 from src.gym.visualizer.multiple_sender_visualizer import MultipleSenderVisualizer
 
-history_len = 10
-features = "sent latency inflation," + "latency ratio," + "send ratio"
-bws = [240, 240, 240, 240, 240] # [100, 240] # [200, 300, 200, 300]
-index = 0
+bws = [240]
 
-def get_network():
-    global index
+env = get_env(bws, 2)
 
-    while True:
-        link1 = Link.generate_link(bws[index], 0.2, 6, 0)
-        links = [link1]
-
-        yield links
-        index = 1 - index
-
-
-import matplotlib.pyplot as plt
-
-senders = [
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    ),
-    Sender(
-        random.uniform(0.3, 1.5) * bws[0],
-        None, 0, features.split(","),
-        history_len=history_len
-    ),
-]
-
-
-env = SimulatedNetworkEnv(senders, get_network(), history_len=history_len, features=features)
+print("ENV", env)
 
 model = CombiningWorker(
     (40, 300),
@@ -84,11 +54,13 @@ model2 = CombiningWorker(
     ]
 )
 
-model.workers[1].set_action(200)
-model2.workers[1].set_action(50)
-
+model.workers[1].set_action(random.uniform(40, 300))
+model2.workers[1].set_action(random.uniform(40, 300))
 
 TIMES = 5000
 
 vis = MultipleSenderVisualizer(env, [model, model2])
-vis.steps(TIMES, 5000, 100)
+fig = vis.steps(TIMES, 5000, 100)
+
+import matplotlib.pyplot as plt
+plt.show()
