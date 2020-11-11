@@ -24,11 +24,11 @@ class TwoPointOGDWorker(Worker):
         self.set_action(40)
 
     def reset_learning_rate(self):
-        self.T = 100
+        self.T = 7000
         self.update_gradient_ascent_speed()
 
     def update_gradient_ascent_speed(self):
-        if self.T < 5000:
+        if self.T < 500:
             self.T += 1
 
         # self.T += 1

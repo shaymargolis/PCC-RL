@@ -27,9 +27,3 @@ class AuroraWorker(Worker):
         self.change_action_delta(self.model.predict(obs)[0][0])
         yield self.action
         yield True
-
-        obs, reward = ds.data
-
-        self.change_action_delta(self.model.predict(obs)[0][0])
-        yield self.action
-        yield True
