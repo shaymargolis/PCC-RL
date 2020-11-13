@@ -47,5 +47,8 @@ model = CombiningWorker(
 TIMES = 5000
 
 vis = SingleSenderVisualizer(env, [model], 0)
-fig = vis.steps(TIMES, 300, 100)
-fig.show()
+vis.steps(TIMES, 300, 100)
+fig = vis.parse_data()
+# fig.show()
+import matplotlib.pyplot as plt
+plt.show()

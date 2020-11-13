@@ -16,10 +16,15 @@ import sys
 import inspect
 import random
 
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
+
+from src.gym.parameter_readme import create_readmefile
+
+from src.common.simple_arg_parse import arg_or_default
 
 from src.gym.network_creator import get_env
 
@@ -29,38 +34,77 @@ from src.gym.worker.two_point_ogd_worker import TwoPointOGDWorker
 from src.gym.worker.combining_worker import CombiningWorker
 
 from src.gym.visualizer.multiple_sender_visualizer import MultipleSenderVisualizer
+from src.gym.visualizer.multiple_sender_stats_visualizer import MultipleSenderStatsVisualizer
 
+NUMBER_OF_EPOCHES = 10
+TIMES = 25000
 bws = [240]
 
-env = get_env(bws, 2)
+OUTPUT = arg_or_default("--output", default=None)
 
-print("ENV", env)
+comb_lr = arg_or_default("--comb_lr", default=5000)
+comb_lower_lr = arg_or_default("--comb_lower_lr", default=0) == 1
+comb_min_proba = arg_or_default("--comb_min_proba", default=0.1)
 
-model = CombiningWorker(
-    (40, 300),
-    env,
-    [
-        AuroraWorker("./rand_model_12", env, (40, 300)),
-        TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
-    ]
-)
+twop_lr = arg_or_default("--twop_lr", default=25000)
+twop_lower_lr = arg_or_default("--twop_lower_lr", default=0) == 1
+twop_delta = arg_or_default("--twop_delta", default=0.01)
 
-model2 = CombiningWorker(
-    (40, 300),
-    env,
-    [
-        AuroraWorker("./rand_model_12", env, (40, 300)),
-        TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20)
-    ]
-)
+comb_kwargs = {
+    'lr': comb_lr,
+    'lower_lr': comb_lower_lr,
+    'min_proba_thresh': comb_min_proba
+}
 
-model.workers[1].set_action(random.uniform(40, 300))
-model2.workers[1].set_action(random.uniform(40, 300))
+two_point_kwargs = {
+    'lr': twop_lr,
+    'lower_lr': twop_lower_lr,
+    'delta': twop_delta
+}
 
-TIMES = 5000
+#  Fix race cond bug
+import matplotlib
+matplotlib.use('Agg')
 
-vis = MultipleSenderVisualizer(env, [model, model2])
-fig = vis.steps(TIMES, 5000, 100)
 
-import matplotlib.pyplot as plt
-plt.show()
+create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
+
+for i in range(NUMBER_OF_EPOCHES):
+    env = get_env(bws, 2)
+
+    print("ENV", env)
+
+    model = CombiningWorker(
+        (40, 300),
+        env,
+        [
+            AuroraWorker("./rand_model_12", env, (40, 300)),
+            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+        ],
+        **comb_kwargs
+    )
+
+    model2 = CombiningWorker(
+        (40, 300),
+        env,
+        [
+            AuroraWorker("./rand_model_12", env, (40, 300)),
+            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+        ],
+        **comb_kwargs
+    )
+
+    start1 = random.uniform(40, 300)
+    start2 = random.uniform(40, 300)
+
+    model.workers[1].set_action(start1)
+    model2.workers[1].set_action(start2)
+
+    vis = MultipleSenderStatsVisualizer(env, [model, model2])
+    vis.steps(TIMES, TIMES, 100)
+
+    fig = vis.parse_data()
+
+    fig.suptitle('COMB=(%d, %r, %.2f), TWOP=(%d, %r, %.2f),\n START=(%.0f, %.0f)' % (comb_lr, comb_lower_lr, comb_min_proba, twop_lr, twop_lower_lr, twop_delta, start1, start2), fontsize=16)
+    fig.savefig(OUTPUT + "/%d.png" % i)
+    vis._save_data(OUTPUT + "/%d.json" % i)

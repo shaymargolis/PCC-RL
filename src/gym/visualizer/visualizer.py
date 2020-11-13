@@ -1,7 +1,21 @@
 from tqdm import tqdm
 from src.gym.simulate_network.network import Network
+import numpy as np
+import json
 from src.gym.worker.worker import Worker
 from src.gym.worker.worker_runner import WorkerRunner
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
 
 
 class Visualizer:
@@ -24,6 +38,16 @@ class Visualizer:
 
     def finish_step(self):
         pass
+    
+    def _save_data(self, path):
+        f = open(path, "w")
+        json.dump(self.data, f, cls=NumpyEncoder)
+        f.close()
+
+    def _load_data(self, path):
+        f = open(path, "r")
+        self.data = json.load(f)
+        f.close()
 
     def steps(self, num_steps: int, reset_interval: int, data_interval: int):
         for i in tqdm(range(num_steps)):
@@ -48,4 +72,5 @@ class Visualizer:
 
             self.worker_runner.finish_step(obs, reward)
 
-        return self.finish_step()
+    def parse_data(self):
+        pass

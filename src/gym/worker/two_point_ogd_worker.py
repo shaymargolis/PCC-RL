@@ -7,15 +7,18 @@ rng = random.SystemRandom()
 
 
 class TwoPointOGDWorker(Worker):
-    def __init__(self, env, actions_limits: tuple, C: float, L: float):
+    def __init__(self, env, actions_limits: tuple, C: float, L: float, lr=3000, lower_lr=False, delta=0.01):
         super().__init__(env, actions_limits)
 
         self.D = actions_limits[1] - actions_limits[0]
         self.C = C
         self.L = L
         self.mu = None
-        self.delta = None
+        self.delta = delta
         self.T = None
+
+        self.lr = lr
+        self.lower_lr = lower_lr
 
         self.reset()
 
@@ -24,15 +27,14 @@ class TwoPointOGDWorker(Worker):
         self.set_action(40)
 
     def reset_learning_rate(self):
-        self.T = 7000
+        self.T = self.lr
         self.update_gradient_ascent_speed()
 
     def update_gradient_ascent_speed(self):
-        if self.T < 500:
+        if self.lower_lr:
             self.T += 1
 
-        # self.T += 1
-        self.delta = 0.01
+        # self.delta = 0.01
         self.mu = self.D / (self.L * self.T ** (1/2))
 
     def get_direction_randomly(self):

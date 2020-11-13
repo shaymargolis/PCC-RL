@@ -11,9 +11,7 @@ def exp_normalize(x):
 
 
 class CombiningWorker(Worker):
-    MIN_PROBA_THRESH = 0.01
-
-    def __init__(self, action_limits, env, workers: list):
+    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.01, lr=5000, lower_lr=False):
         super().__init__(env, action_limits)
 
         self.workers = workers
@@ -22,6 +20,9 @@ class CombiningWorker(Worker):
         self.delta = None
         self.T = None
         self.proba = None
+        self.min_proba_thresh = min_proba_thresh
+        self.lr = lr
+        self.lower_lr = lower_lr
 
         self.N = 2
 
@@ -32,13 +33,11 @@ class CombiningWorker(Worker):
         self.weights = np.array([0, 0], dtype=np.int64)
         self.e = 0.5
         self.delta = 0
-        self.T = 0
-        self.T = 5000
+        self.T = self.lr
 
     def update_parameters(self):
-        if self.T < 100:
+        if self.lower_lr:
             self.T += 1
-        # self.T += 1
 
         # General equation:
         # self.e = min(1/N, sqrt(log(N)/N*T)
@@ -52,8 +51,8 @@ class CombiningWorker(Worker):
 
         self.update_parameters()
 
-        proba *= (1 - 2*CombiningWorker.MIN_PROBA_THRESH)
-        proba += CombiningWorker.MIN_PROBA_THRESH
+        proba *= (1 - 2*self.min_proba_thresh)
+        proba += self.min_proba_thresh
 
         self.proba = proba
 

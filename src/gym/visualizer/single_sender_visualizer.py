@@ -46,7 +46,7 @@ class SingleSenderVisualizer(Visualizer):
         data["loss"] += [event["Loss Rate"] for event in info["Events"]]
         data["reward"] += [event["Reward"] for event in info["Events"]]
 
-    def finish_step(self):
+    def parse_data(self):
         i = self.sender_ind
         data = self.data[i]
 
