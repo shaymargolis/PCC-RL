@@ -11,7 +11,7 @@ def exp_normalize(x):
 
 
 class CombiningWorker(Worker):
-    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.01, lr=5000, lower_lr=False):
+    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.1, lr=500, lower_lr=False):
         super().__init__(env, action_limits)
 
         self.workers = workers
@@ -57,11 +57,16 @@ class CombiningWorker(Worker):
         self.proba = proba
 
     def get_proba(self):
-        # return [0, 1]
+        # return [1, 0]
         return self.proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):
         self.weights[chosen_index] += reward / proba
+
+    def set_action(self, new_action):
+        [worker.set_action(new_action) for worker in self.workers]
+        
+        super().set_action(new_action)
 
     def step(self, ds) -> float:
         ind = np.random.choice(self.N, 1, p=self.get_proba())[0]

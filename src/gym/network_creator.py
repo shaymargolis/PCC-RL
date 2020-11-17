@@ -1,6 +1,8 @@
 import random
 
 from src.gym.simulate_network.link import Link
+from src.gym.simulate_network.reward.vivace_latency_reward import VivaceLatencyReward
+from src.gym.simulate_network.reward.vivace_loss_reward import VivaceLossReward
 from src.gym.simulate_network.sender import Sender
 from src.gym.simulate_network.simulated_network_env import SimulatedNetworkEnv
 
@@ -26,7 +28,15 @@ class NetworkGenerator:
                 self.index = 0
 
 
-def get_env(bws, sender_count):
+def get_reward(reward_type):
+    if reward_type == "loss":
+        return VivaceLossReward()
+
+    if reward_type == "latency":
+        return VivaceLatencyReward()
+
+
+def get_env(bws, sender_count, reward_type):
     senders = []
 
     for i in range(sender_count):
@@ -34,7 +44,8 @@ def get_env(bws, sender_count):
             Sender(
                 random.uniform(0.3, 1.5) * bws[0],
                 None, 0, features.split(","),
-                history_len=history_len
+                history_len=history_len,
+                reward=get_reward(reward_type)
             )
         )
 

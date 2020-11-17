@@ -7,8 +7,10 @@ rng = random.SystemRandom()
 
 
 class TwoPointOGDWorker(Worker):
-    def __init__(self, env, actions_limits: tuple, C: float, L: float, lr=3000, lower_lr=False, delta=0.01):
+    def __init__(self, env, actions_limits: tuple, C: float, L: float, lr=10000, lower_lr=False, delta=0.01, sender_id=0):
         super().__init__(env, actions_limits)
+
+        self.sender_id = sender_id
 
         self.D = actions_limits[1] - actions_limits[0]
         self.C = C

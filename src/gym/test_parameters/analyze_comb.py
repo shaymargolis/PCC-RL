@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import tqdm
 
-from src.gym.visualizer.multiple_sender_stats_visualizer import MultipleSenderStatsVisualizer
+from src.gym.visualizer.single_sender_visualizer import SingleSenderVisualizer
 
 INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests"
 
@@ -17,40 +17,25 @@ class FakeEnv:
 
 
 def analyze_file(file):
-    vis = MultipleSenderStatsVisualizer(FakeEnv(), [])
+    vis = SingleSenderVisualizer(FakeEnv(), [], 0)
     vis._load_data(file)
 
-    ewma1 = np.array(vis.data[0]["ewma"])
-    ewma2 = np.array(vis.data[1]["ewma"])
-    
-    diffEwma = ewma1 - ewma2
-    absDiffEwma = np.abs(diffEwma)
+    send = np.array(vis.data[0]["send"])
+    optim = np.array(vis.data[0]["optim"])
+    sig = np.array(vis.data[0]["significance"])[:, 0]
 
-    rate1 = np.array(vis.data[0]["send"])
-    rate2 = np.array(vis.data[1]["send"])
-    
-    diffRate = rate1 - rate2
+    diffRate = optim - send
     absDiffRate = np.abs(diffRate)
 
-    sig1 = np.array(vis.data[0]["significance"])[:, 1]
-    sig2 = np.array(vis.data[1]["significance"])[:, 1]
+    avgSig = np.mean(sig)
+    sigFinal = np.mean(sig[-500:])
 
-    avgSig1 = np.mean(sig1)
-    avgSig2 = np.mean(sig2)
-
-    sig1Final = np.mean(sig1[-500:])
-    sig2Final = np.mean(sig2[-500:])
-    
     return [
-        np.sum(diffEwma),
-        np.sum(absDiffEwma),
-        np.sum(diffRate),
-        np.sum(absDiffRate),
-        avgSig1,
-        avgSig2,
-        sig1Final,
-        sig2Final,
-        file
+        np.sum(diffRate), # DiffRate
+        np.sum(absDiffRate), # absDiffRate
+        avgSig, # avgSig
+        sigFinal, # sigFinal
+        file # filename
     ]
 
 
@@ -60,7 +45,8 @@ def analyze_dir_with_params(dir_path, dir_params):
             res = []
             try:
                 res = analyze_file(INPUT_DIR + "/" + dir_path + "/" + file_name)
-            except:
+            except Exception as e:
+                # print(e)
                 print("\t[x] Error while analyzing %s" % (INPUT_DIR + "/" + dir_path + "/" + file_name))
                 continue
 
@@ -90,7 +76,7 @@ def analyze_dir(dir_path):
 #     analyze_dir(dir_name)
 
 dir_params = [
-    5000, # combLr
+    500, # combLr
     0, # combLowerLr
     0.1, # combMinProba
     10000, # twopLr
@@ -99,11 +85,11 @@ dir_params = [
 ]
 
 
-analyze_dir_with_params("multiple_5000_0.1_10000_0.01", dir_params)
+analyze_dir_with_params("comb_500_0.1_1000_0.01", dir_params)
 
 result = pd.DataFrame(data, columns=["combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
-                                     "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "sig1F", "sig2F", "file_name"])
-result.to_csv("/cs/labs/schapiram/shaymar/out5.csv")
+                                     "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"])
+result.to_csv("/cs/labs/schapiram/shaymar/out_comb0.csv")
 
 print(result)
 

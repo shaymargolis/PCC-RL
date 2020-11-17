@@ -4,55 +4,36 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out5.csv")
+result = pd.read_csv("/cs/labs/schapiram/shaymar/out_comb1.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
-#                                      "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "file_name"]
+#                                      "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"]
 
-result["totalPredF"] = result["sig1F"] + result["sig2F"]
-result["totalPred"] = result["sig1"] + result["sig2"]
-result["diffRate"] = result["diffRate"].abs()
-result["totalDiff"] = result["absDiffRate"] + result["diffRate"]
+print(result["avgSig"])
 
-def plot_2d_kde(x, y, xlabel="x", ylabel="y", title="2d kde"):
-    nbins = 300
-    k = kde.gaussian_kde([x, y])
-    xi, yi = np.mgrid[x.min():x.max():nbins * 1j, y.min():y.max():nbins * 1j]
-    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+result["avgSig"].plot.kde()
+plt.show()
 
-    #  Calculate prob total
-    grid = zi.reshape(xi.shape)
-    print(grid)
-    print(grid.shape)
-    print(np.sum(grid[150:,150:]))
-    print(np.sum(zi))
+for i in range(1000):
+    pass
 
-    # Make the plot
-    plt.pcolormesh(xi, yi, zi.reshape(xi.shape))
-    plt.colorbar()
-    plt.xlabel(xlabel),
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.show()
+# exit(1)
 
-plot_2d_kde(result["sig1F"], result["sig2F"],
-            xlabel='Sender 1 Sig',
-            ylabel='Sender 2 Sig',
-            title='Probability Density of OGD Significance (1 = Most significant)')
+result.plot.scatter(x='avgSig', y='diffRate')
 plt.show()
 
 #  NOT USING LOWER_LR
 print("diffRate")
-absDiffRate = result.sort_values('totalPredF')
+absDiffRate = result.sort_values('diffRate', ascending=True)
 
 i = 0
 
 for index, row in absDiffRate.iterrows():
-    print('%.2E' % row["totalPredF"])
+    print('%.2E (%.2f)' % (row["diffRate"], row["avgSig"]))
     if 0 <= i:
         f = row['file_name'][:-5] + '.png'
         image = mpimg.imread(f)
-        plt.title('%.2E' % row["totalPredF"])
+        plt.title('%.2E (%.2f)' % (row["diffRate"], row["avgSig"]))
         plt.imshow(image)
         plt.show()
     i += 1

@@ -129,8 +129,10 @@ class MultipleSenderStatsVisualizer(Visualizer):
 
             axis.plot(data["times"], data["send"], colors[i][0] + "-", label="[%d] Sent" % (i + 1))
 
+        wc = len(self.workers)
+
         axis.plot(data["times"], data["optim"], "b--", label="Optimal")
-        axis.plot(data["times"], np.array(data["optim"]) / 2, "r--", label="Optimal/2")
+        axis.plot(data["times"], np.array(data["optim"]) / wc, "r--", label="Optimal/%d" % wc)
 
         axis.legend()
 
