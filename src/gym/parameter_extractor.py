@@ -10,7 +10,7 @@ def extract_parameters():
 
     twop_lr = arg_or_default("--twop_lr", default=10000)
     twop_lower_lr = arg_or_default("--twop_lower_lr", default=0) == 1
-    twop_delta = arg_or_default("--twop_delta", default=0.01)
+    twop_delta = arg_or_default("--twop_delta", default=0.02)
 
     offset = arg_or_default("--offset", default=0)
 

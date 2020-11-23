@@ -47,20 +47,22 @@ offset = params["offset"]
 
 create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
 
+comb_kwargs["debug"] = False
 
 # Race cond bug
-import matplotlib
-matplotlib.use('Agg')
+# import matplotlib
+# matplotlib.use('Agg')
 
 
 for i in range(NUMBER_OF_EPOCHES):
-    env = get_env(bws, 1, params["reward_type"])
+    bws_shuffled = random.sample(bws, k=len(bws))
+    env = get_env(bws_shuffled, 1, params["reward_type"])
 
     model = CombiningWorker(
         (40, 300),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
+            AuroraWorker("./combined_model_14", env, (40, 300)),
             TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
         ],
         **comb_kwargs

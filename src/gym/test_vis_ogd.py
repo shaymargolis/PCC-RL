@@ -70,7 +70,7 @@ two_point_kwargs = {
 create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
 
 for i in range(NUMBER_OF_EPOCHES):
-    env = get_env(bws, 2)
+    env = get_env(bws, 2, "loss")
 
     print("ENV", env)
 

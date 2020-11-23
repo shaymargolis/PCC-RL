@@ -6,7 +6,7 @@ import tqdm
 
 from src.gym.visualizer.single_sender_visualizer import SingleSenderVisualizer
 
-INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests"
+INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests/pls_sign"
 
 data = []
 
@@ -76,20 +76,21 @@ def analyze_dir(dir_path):
 #     analyze_dir(dir_name)
 
 dir_params = [
-    500, # combLr
+    3000, # combLr
     0, # combLowerLr
     0.1, # combMinProba
-    10000, # twopLr
+    5000, # twopLr
     0, # twopLowerLr
-    0.01, # twopDelta
+    0.02, # twopDelta
 ]
 
+FILE_NAME = "comb_3000_0.1_5000_0.02"
 
-analyze_dir_with_params("comb_500_0.1_1000_0.01", dir_params)
+analyze_dir_with_params(FILE_NAME, dir_params)
 
 result = pd.DataFrame(data, columns=["combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
                                      "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"])
-result.to_csv("/cs/labs/schapiram/shaymar/out_comb0.csv")
+result.to_csv("/cs/labs/schapiram/shaymar/out-fixed-%s.csv" % FILE_NAME)
 
 print(result)
 

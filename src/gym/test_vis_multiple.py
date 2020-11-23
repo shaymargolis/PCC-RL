@@ -40,7 +40,7 @@ from src.gym.visualizer.multiple_sender_stats_visualizer import MultipleSenderSt
 
 NUMBER_OF_EPOCHES = 10
 TIMES = 15000
-bws = [240]
+bws = [400]
 
 params = extract_parameters()
 
@@ -50,8 +50,8 @@ OUTPUT = params["output"]
 offset = params["offset"]
 
 #  Fix race cond bug
-import matplotlib
-matplotlib.use('Agg')
+# import matplotlib
+# matplotlib.use('Agg')
 
 create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
 
@@ -61,30 +61,34 @@ for i in range(NUMBER_OF_EPOCHES):
     print("ENV", env)
 
     model = CombiningWorker(
-        (40, 300),
+        (80, 400),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, sender_id=0, **two_point_kwargs)
+            AuroraWorker("./rand_model_12", env, (80, 400)),
+            TwoPointOGDWorker(env, (80, 400), C=11 * 400, L=20, sender_id=0, **two_point_kwargs)
         ],
         **comb_kwargs
     )
 
     model2 = CombiningWorker(
-        (40, 300),
+        (80, 400),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, sender_id=1, **two_point_kwargs)
+            AuroraWorker("./rand_model_12", env, (80, 400)),
+            TwoPointOGDWorker(env, (80, 400), C=11 * 400, L=20, sender_id=1, **two_point_kwargs)
         ],
         **comb_kwargs
     )
 
     start1 = random.uniform(40, 300)
-    start2 = random.uniform(40, 300)
+    # start2 = random.uniform(40, 300)
+    start2 = start1
 
     model.set_action(start1)
     model2.set_action(start2)
+
+    model.weights[1] = 500
+    model2.weights[1] = 500
 
     vis = MultipleSenderStatsVisualizer(env, [model, model2])
     vis.steps(TIMES, TIMES, 100)
@@ -101,6 +105,8 @@ for i in range(NUMBER_OF_EPOCHES):
         params["reward_type"],
         start1, start2
     ), fontsize=16)
-    fig.savefig(OUTPUT + "/%d.png" % (i + offset))
+
     plt.show()
+
+    fig.savefig(OUTPUT + "/%d.png" % (i + offset))
     vis._save_data(OUTPUT + "/%d.json" % (i + offset))

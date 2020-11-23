@@ -38,7 +38,7 @@ from src.gym.visualizer.multiple_sender_stats_visualizer import MultipleSenderSt
 
 NUMBER_OF_EPOCHES = 1
 TIMES = 15000
-bws = [300]
+bws = [600]
 
 OUTPUT = arg_or_default("--output", default=None)
 
@@ -70,44 +70,44 @@ two_point_kwargs = {
 create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
 
 for i in range(NUMBER_OF_EPOCHES):
-    env = get_env(bws, 3)
+    env = get_env(bws, 3, "loss")
 
     print("ENV", env)
 
     model = CombiningWorker(
-        (40, 300),
+        (100, 600),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+            AuroraWorker("./rand_model_12", env, (100, 600)),
+            TwoPointOGDWorker(env, (100, 600), C=11 * 600, L=20, **two_point_kwargs)
         ],
         **comb_kwargs
     )
 
     model2 = CombiningWorker(
-        (40, 300),
+        (100, 600),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+            AuroraWorker("./rand_model_12", env, (100, 600)),
+            TwoPointOGDWorker(env, (100, 600), C=11 * 600, L=20, **two_point_kwargs)
         ],
         **comb_kwargs
     )
 
 
     model3 = CombiningWorker(
-        (40, 300),
+        (100, 600),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+            AuroraWorker("./rand_model_12", env, (100, 600)),
+            TwoPointOGDWorker(env, (100, 600), C=11 * 300, L=20, **two_point_kwargs)
         ],
         **comb_kwargs
     )
 
-    start1 = random.uniform(40, 300)
-    start2 = random.uniform(40, 300)
-    start3 = random.uniform(40, 300)
+    start1 = random.uniform(100, 600)
+    start2 = random.uniform(100, 600)
+    start3 = random.uniform(100, 600)
 
     model.set_action(start1)
     model2.set_action(start2)

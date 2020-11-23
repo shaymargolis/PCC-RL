@@ -11,7 +11,7 @@ def exp_normalize(x):
 
 
 class CombiningWorker(Worker):
-    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.1, lr=500, lower_lr=False):
+    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.1, lr=500, lower_lr=False, sender_idx=0, debug=False):
         super().__init__(env, action_limits)
 
         self.workers = workers
@@ -23,6 +23,9 @@ class CombiningWorker(Worker):
         self.min_proba_thresh = min_proba_thresh
         self.lr = lr
         self.lower_lr = lower_lr
+
+        self.sender_idx = sender_idx
+        self.debug = debug
 
         self.N = 2
 
@@ -47,7 +50,7 @@ class CombiningWorker(Worker):
         self.e = min(0.5, math.sqrt(np.log(2) / (2*self.T)))
 
     def calculate_proba(self):
-        proba = exp_normalize(-1 * self.e * self.weights)
+        proba = exp_normalize(self.e * self.weights)
 
         self.update_parameters()
 
@@ -57,6 +60,7 @@ class CombiningWorker(Worker):
         self.proba = proba
 
     def get_proba(self):
+        # return [Aurora, OGD]
         # return [1, 0]
         return self.proba
 
@@ -67,6 +71,10 @@ class CombiningWorker(Worker):
         [worker.set_action(new_action) for worker in self.workers]
         
         super().set_action(new_action)
+
+    def _debugPrint(self, *args, **kwargs):
+        if self.debug:
+            print(*args, **kwargs)
 
     def step(self, ds) -> float:
         ind = np.random.choice(self.N, 1, p=self.get_proba())[0]
@@ -91,7 +99,13 @@ class CombiningWorker(Worker):
             #  Continue to next action
             next(gen)
 
-        reward = reward / reward_steps if reward_steps >= 1 else 0
+        if reward_steps == 0:
+            print("[ERROR] Worker's number of steps must be atleast 1.")
+            return
+
+        reward = reward / reward_steps
+
+        self._debugPrint("[Combining %d] worker %d rewarded %.2f [%.2f, %.2f]" % (self.sender_idx, ind, reward, self.weights[0], self.weights[1]))
 
         self.update_weights(ind, self.get_proba()[ind], reward)
         self.calculate_proba()

@@ -3,4 +3,4 @@ source thesis_sed/bin/activate
 
 cd src/gym
 
-python stable_restart.py --output="/cs/labs/schapiram/shaymar/utility_loss_lat_1"
+python stable_combinig.py --output="/cs/labs/schapiram/shaymar/aurora_train_combined"

@@ -4,7 +4,7 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out5.csv")
+result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-multiple_3000_0.1_5000_0.02.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
 #                                      "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "file_name"]
@@ -13,6 +13,17 @@ result["totalPredF"] = result["sig1F"] + result["sig2F"]
 result["totalPred"] = result["sig1"] + result["sig2"]
 result["diffRate"] = result["diffRate"].abs()
 result["totalDiff"] = result["absDiffRate"] + result["diffRate"]
+
+result["totalEwma"] = result["ewma1Final"] + result["ewma2Final"]
+
+result.plot.scatter(x='totalPred', y='totalEwma')
+plt.show()
+
+result["diffRate"].plot.kde()
+plt.show()
+
+for i in range(1000):
+    pass
 
 def plot_2d_kde(x, y, xlabel="x", ylabel="y", title="2d kde"):
     nbins = 300
@@ -35,7 +46,7 @@ def plot_2d_kde(x, y, xlabel="x", ylabel="y", title="2d kde"):
     plt.title(title)
     plt.show()
 
-plot_2d_kde(result["sig1F"], result["sig2F"],
+plot_2d_kde(result["sig1"], result["sig2"],
             xlabel='Sender 1 Sig',
             ylabel='Sender 2 Sig',
             title='Probability Density of OGD Significance (1 = Most significant)')
@@ -43,16 +54,19 @@ plt.show()
 
 #  NOT USING LOWER_LR
 print("diffRate")
-absDiffRate = result.sort_values('totalPredF')
+absDiffRate = result.sort_values('absDiffRate', ascending=True)
 
 i = 0
 
 for index, row in absDiffRate.iterrows():
-    print('%.2E' % row["totalPredF"])
+    if row["absDiffRate"] <= 2*10**10:
+        continue
+
+    print('%.2E' % row["absDiffRate"])
     if 0 <= i:
         f = row['file_name'][:-5] + '.png'
         image = mpimg.imread(f)
-        plt.title('%.2E' % row["totalPredF"])
+        plt.title('%.2E' % row["absDiffRate"])
         plt.imshow(image)
         plt.show()
     i += 1

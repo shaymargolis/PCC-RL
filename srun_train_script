@@ -1,2 +1,2 @@
 #!/bin/sh
-srun -c4 --mem=400m --time=2-0 --mpi=pmix train_script
+srun -c4 --mem=1g --time=2-0 --mpi=pmix train_script

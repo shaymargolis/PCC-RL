@@ -6,7 +6,7 @@ import tqdm
 
 from src.gym.visualizer.multiple_sender_stats_visualizer import MultipleSenderStatsVisualizer
 
-INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests"
+INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests/pls_sign"
 
 data = []
 
@@ -26,6 +26,9 @@ def analyze_file(file):
     diffEwma = ewma1 - ewma2
     absDiffEwma = np.abs(diffEwma)
 
+    ewma1Final = ewma1[-1]
+    ewma2Final = ewma2[-1]
+
     rate1 = np.array(vis.data[0]["send"])
     rate2 = np.array(vis.data[1]["send"])
     
@@ -44,6 +47,8 @@ def analyze_file(file):
     return [
         np.sum(diffEwma),
         np.sum(absDiffEwma),
+        ewma1Final,
+        ewma2Final,
         np.sum(diffRate),
         np.sum(absDiffRate),
         avgSig1,
@@ -90,20 +95,21 @@ def analyze_dir(dir_path):
 #     analyze_dir(dir_name)
 
 dir_params = [
-    5000, # combLr
+    3000, # combLr
     0, # combLowerLr
     0.1, # combMinProba
-    10000, # twopLr
+    5000, # twopLr
     0, # twopLowerLr
-    0.01, # twopDelta
+    0.02, # twopDelta
 ]
 
+FILE_NAME = "multiple_3000_0.1_5000_0.02"
 
-analyze_dir_with_params("multiple_5000_0.1_10000_0.01", dir_params)
+analyze_dir_with_params(FILE_NAME, dir_params)
 
 result = pd.DataFrame(data, columns=["combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
-                                     "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "sig1F", "sig2F", "file_name"])
-result.to_csv("/cs/labs/schapiram/shaymar/out5.csv")
+                                     "diffEwma", "absDiffEwma", "ewma1Final", "ewma2Final", "diffRate", "absDiffRate", "sig1", "sig2", "sig1F", "sig2F", "file_name"])
+result.to_csv("/cs/labs/schapiram/shaymar/out-fixed-%s.csv" % FILE_NAME)
 
 print(result)
 

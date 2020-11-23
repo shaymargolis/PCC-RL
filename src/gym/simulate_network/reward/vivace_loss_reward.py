@@ -17,7 +17,7 @@ class VivaceLossReward(Reward):
         latency = grad_latency
 
         # reward = (x - x * (900 * latency + 11 * loss))
-        reward = (x - x * (11 * loss))
+        reward = (x**0.9 - x * (11 * loss))
 
         if not isinstance(reward, float):
             print("NOOOOO")

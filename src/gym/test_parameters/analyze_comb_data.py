@@ -4,7 +4,8 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out_comb1.csv")
+result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-comb_3000_0.1_5000_0.02.csv")
+# result = pd.read_csv("/cs/labs/schapiram/shaymar/out-comb_shuffled_500_0.1_10000_0.01.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
 #                                      "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"]
@@ -24,7 +25,7 @@ plt.show()
 
 #  NOT USING LOWER_LR
 print("diffRate")
-absDiffRate = result.sort_values('diffRate', ascending=True)
+absDiffRate = result.sort_values('diffRate', ascending=False)
 
 i = 0
 
