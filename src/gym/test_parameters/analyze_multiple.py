@@ -35,6 +35,12 @@ def analyze_file(file):
     diffRate = rate1 - rate2
     absDiffRate = np.abs(diffRate)
 
+    avgRate1 = np.average(rate1)
+    avgRate2 = np.average(rate2)
+
+    avgThrou1 = np.average(vis.data[0]["throu"])
+    avgThrou2 = np.average(vis.data[1]["throu"])
+
     sig1 = np.array(vis.data[0]["significance"])[:, 1]
     sig2 = np.array(vis.data[1]["significance"])[:, 1]
 
@@ -45,12 +51,16 @@ def analyze_file(file):
     sig2Final = np.mean(sig2[-500:])
     
     return [
-        np.sum(diffEwma),
-        np.sum(absDiffEwma),
+        np.sum(diffEwma) / vis.data[0]["times"][-1],
+        np.sum(absDiffEwma) / vis.data[0]["times"][-1],
         ewma1Final,
         ewma2Final,
-        np.sum(diffRate),
-        np.sum(absDiffRate),
+        np.sum(diffRate) / vis.data[0]["times"][-1],
+        np.sum(absDiffRate) / vis.data[0]["times"][-1],
+        avgRate1,
+        avgRate2,
+        avgThrou1,
+        avgThrou2,
         avgSig1,
         avgSig2,
         sig1Final,
@@ -65,8 +75,8 @@ def analyze_dir_with_params(dir_path, dir_params):
             res = []
             try:
                 res = analyze_file(INPUT_DIR + "/" + dir_path + "/" + file_name)
-            except:
-                print("\t[x] Error while analyzing %s" % (INPUT_DIR + "/" + dir_path + "/" + file_name))
+            except Exception as e:
+                print("\t[x] Error while analyzing %s" % (INPUT_DIR + "/" + dir_path + "/" + file_name), e)
                 continue
 
             arr = dir_params[:]
@@ -77,7 +87,7 @@ def analyze_dir_with_params(dir_path, dir_params):
 
 
 def analyze_dir(dir_path):
-    params = dir_path.split("-")
+    params = dir_path.split("/")[1].split("-")
 
     # $combLr-$combLowerLr-$combMinProba--$twopLr-$twopLowerLr-$twopDelta
     dir_params = [
@@ -91,24 +101,28 @@ def analyze_dir(dir_path):
 
     analyze_dir_with_params(dir_path, dir_params)
 
-# for dir_name in tqdm.tqdm(os.listdir(INPUT_DIR)):
-#     analyze_dir(dir_name)
+# FILE_NAME = "combinde2_aurora_last_occurrence2"
+FILE_NAME = "combined2_37_aurora_specific5"
+
+# for dir_name in tqdm.tqdm(os.listdir(INPUT_DIR + "/" + FILE_NAME)):
+#     analyze_dir(FILE_NAME + "/" + dir_name)
+#
 
 dir_params = [
     3000, # combLr
     0, # combLowerLr
-    0.1, # combMinProba
+    0.12, # combMinProba
     5000, # twopLr
     0, # twopLowerLr
     0.02, # twopDelta
 ]
 
-FILE_NAME = "multiple_3000_0.1_5000_0.02"
-
 analyze_dir_with_params(FILE_NAME, dir_params)
 
 result = pd.DataFrame(data, columns=["combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
-                                     "diffEwma", "absDiffEwma", "ewma1Final", "ewma2Final", "diffRate", "absDiffRate", "sig1", "sig2", "sig1F", "sig2F", "file_name"])
+                                     "diffEwma", "absDiffEwma", "ewma1Final", "ewma2Final", "diffRate", "absDiffRate",
+                                     "avgRate1", "avgRate2","avgThrou1","avgThrou2",
+                                     "sig1", "sig2", "sig1F", "sig2F", "file_name"])
 result.to_csv("/cs/labs/schapiram/shaymar/out-fixed-%s.csv" % FILE_NAME)
 
 print(result)

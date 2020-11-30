@@ -23,7 +23,7 @@ parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
 
-from src.gym.network_creator import get_env
+from src.gym.network_creator import get_env, get_ogd_worker, get_agent_reward_calculator
 from src.gym.parameter_extractor import extract_parameters
 from src.gym.parameter_readme import create_readmefile
 
@@ -45,13 +45,14 @@ two_point_kwargs = params["two_point_kwargs"]
 OUTPUT = params["output"]
 offset = params["offset"]
 
-create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
+create_readmefile(params)
 
 comb_kwargs["debug"] = False
 
 # Race cond bug
-# import matplotlib
-# matplotlib.use('Agg')
+if params["concurrent"] == 1:
+    import matplotlib
+    matplotlib.use('Agg')
 
 
 for i in range(NUMBER_OF_EPOCHES):
@@ -62,9 +63,10 @@ for i in range(NUMBER_OF_EPOCHES):
         (40, 300),
         env,
         [
-            AuroraWorker("./combined_model_14", env, (40, 300)),
-            TwoPointOGDWorker(env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
+            AuroraWorker("./" + params["aurora_agent"], env, (40, 300)),
+            get_ogd_worker(params["ogd_worker"], env, (40, 300), C=11 * 300, L=20, **two_point_kwargs)
         ],
+        reward_calculator=get_agent_reward_calculator(params["agent_reward"]),
         **comb_kwargs
     )
 

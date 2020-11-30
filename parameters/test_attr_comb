@@ -1,0 +1,26 @@
+#!/bin/sh
+
+OUTPUT="/cs/labs/schapiram/shaymar/parameter_tests/comb_env/combined2_37_specific5"
+
+declare -a OffsetOps=(0 10 20 30 40 50 60 70 80 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290 300 310 320 330 340 350 360 370 380 390 400)
+
+out=""
+
+mkdir $OUTPUT
+
+combLr=3000
+combLowerLr=0
+combMinProba=0.12
+twopLr=5000
+twopLowerLr=0
+twopDelta=0.02
+rewardType=linear_loss
+ogdWorker=one_point
+auroraWorker=combined2_model_37
+#auroraWorker=rand_model_12
+agent_reward=last_occurrence
+
+for offset in ${OffsetOps[@]}; do
+  out=$OUTPUT
+  sbatch -c1 --mem=1g --time=200 run_vis_comb "${@:1}" --concurrent=1 --output=$out --agent_reward=$agent_reward --aurora=$auroraWorker  --ogd=$ogdWorker --comb_lr=$combLr --comb_lower_lr=$combLowerLr --comb_min_proba=$combMinProba --twop_lr=$twopLr --twop_lower_lr=$twopLowerLr --twop_delta=$twopDelta --offset=$offset --reward=$rewardType
+done

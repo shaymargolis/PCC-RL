@@ -4,15 +4,27 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-comb_3000_0.1_5000_0.02.csv")
+result = pd.read_csv("/cs/labs/schapiram/shaymar/comb-fixed-combined2_37_specific5.csv")
 # result = pd.read_csv("/cs/labs/schapiram/shaymar/out-comb_shuffled_500_0.1_10000_0.01.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
 #                                      "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"]
 
+result["diffRate"] = result["diffRate"] / (8e6)
+result["absDiffRate"] = result["absDiffRate"] / (8e6)
+
 print(result["avgSig"])
 
 result["avgSig"].plot.kde()
+plt.show()
+
+result["absDiffRate"].plot.kde()
+plt.xlabel("Abs diff rate [MB/s]")
+plt.show()
+
+
+result["diffRate"].plot.kde()
+plt.xlabel("Diff rate [MB/s]")
 plt.show()
 
 for i in range(1000):

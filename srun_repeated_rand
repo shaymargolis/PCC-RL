@@ -1,0 +1,2 @@
+#!/bin/sh
+srun -c4 --mem=400m --time=2-0 --mpi=pmix repeated_script_rand

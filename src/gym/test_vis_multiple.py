@@ -28,7 +28,7 @@ from src.gym.parameter_extractor import extract_parameters
 
 from src.common.simple_arg_parse import arg_or_default
 
-from src.gym.network_creator import get_env
+from src.gym.network_creator import get_env, get_ogd_worker, get_agent_reward_calculator
 
 from src.gym.worker.aurora_worker import AuroraWorker
 from src.gym.worker.ogd_worker import OGDWorker
@@ -50,10 +50,11 @@ OUTPUT = params["output"]
 offset = params["offset"]
 
 #  Fix race cond bug
-# import matplotlib
-# matplotlib.use('Agg')
+if params["concurrent"] == 1:
+    import matplotlib
+    matplotlib.use('Agg')
 
-create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
+create_readmefile(params)
 
 for i in range(NUMBER_OF_EPOCHES):
     env = get_env(bws, 2, params["reward_type"])
@@ -64,9 +65,10 @@ for i in range(NUMBER_OF_EPOCHES):
         (80, 400),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (80, 400)),
-            TwoPointOGDWorker(env, (80, 400), C=11 * 400, L=20, sender_id=0, **two_point_kwargs)
+            AuroraWorker("./" + params["aurora_agent"], env, (80, 400)),
+            get_ogd_worker(params["ogd_worker"], env, (80, 400), C=11 * 400, L=20, sender_id=0, **two_point_kwargs)
         ],
+        reward_calculator=get_agent_reward_calculator(params["agent_reward"]),
         **comb_kwargs
     )
 
@@ -74,21 +76,18 @@ for i in range(NUMBER_OF_EPOCHES):
         (80, 400),
         env,
         [
-            AuroraWorker("./rand_model_12", env, (80, 400)),
-            TwoPointOGDWorker(env, (80, 400), C=11 * 400, L=20, sender_id=1, **two_point_kwargs)
+            AuroraWorker("./" + params["aurora_agent"], env, (80, 400)),
+            get_ogd_worker(params["ogd_worker"], env, (80, 400), C=11 * 400, L=20, sender_id=1, **two_point_kwargs)
         ],
+        reward_calculator=get_agent_reward_calculator(params["agent_reward"]),
         **comb_kwargs
     )
 
     start1 = random.uniform(40, 300)
-    # start2 = random.uniform(40, 300)
-    start2 = start1
+    start2 = random.uniform(40, 300)
 
     model.set_action(start1)
     model2.set_action(start2)
-
-    model.weights[1] = 500
-    model2.weights[1] = 500
 
     vis = MultipleSenderStatsVisualizer(env, [model, model2])
     vis.steps(TIMES, TIMES, 100)

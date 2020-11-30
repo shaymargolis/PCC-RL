@@ -67,7 +67,7 @@ two_point_kwargs = {
 # matplotlib.use('Agg')
 
 
-create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
+create_readmefile(params)
 
 for i in range(NUMBER_OF_EPOCHES):
     env = get_env(bws, 2, "loss")

@@ -6,7 +6,7 @@ import tqdm
 
 from src.gym.visualizer.single_sender_visualizer import SingleSenderVisualizer
 
-INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests/pls_sign"
+INPUT_DIR = "/cs/labs/schapiram/shaymar/parameter_tests/comb_env"
 
 data = []
 
@@ -31,8 +31,8 @@ def analyze_file(file):
     sigFinal = np.mean(sig[-500:])
 
     return [
-        np.sum(diffRate), # DiffRate
-        np.sum(absDiffRate), # absDiffRate
+        np.sum(diffRate) / vis.data[0]["times"][-1], # DiffRate
+        np.sum(absDiffRate) / vis.data[0]["times"][-1], # absDiffRate
         avgSig, # avgSig
         sigFinal, # sigFinal
         file # filename
@@ -84,13 +84,13 @@ dir_params = [
     0.02, # twopDelta
 ]
 
-FILE_NAME = "comb_3000_0.1_5000_0.02"
+FILE_NAME = "combined2_37_specific5"
 
 analyze_dir_with_params(FILE_NAME, dir_params)
 
 result = pd.DataFrame(data, columns=["combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
                                      "diffRate", "absDiffRate", "avgSig", "sigFinal", "file_name"])
-result.to_csv("/cs/labs/schapiram/shaymar/out-fixed-%s.csv" % FILE_NAME)
+result.to_csv("/cs/labs/schapiram/shaymar/comb-fixed-%s.csv" % FILE_NAME)
 
 print(result)
 

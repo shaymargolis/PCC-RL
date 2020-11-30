@@ -6,7 +6,7 @@ from src.gym.worker.worker import Worker
 rng = random.SystemRandom()
 
 
-class TwoPointOGDWorker(Worker):
+class OnePointOGDWorker(Worker):
     def __init__(self, env, actions_limits: tuple, C: float, L: float, lr=10000, lower_lr=False, delta=0.01, sender_id=0):
         super().__init__(env, actions_limits)
 
@@ -43,38 +43,20 @@ class TwoPointOGDWorker(Worker):
         choice = rng.choice([1, -1])
         return choice
 
-    # def step(self, ds) -> float:
-    #     _, reward0 = ds.data
-    #
-    #     direction = self.get_direction_randomly()
-    #
-    #     yield self.action*(1 + direction*self.delta)
-    #     yield True
-    #
-    #     _, reward1 = ds.data
-    #
-    #     gradient = direction * (reward1 - reward0) / (self.action * self.delta)
-    #
-    #     self.set_action(self.action + self.mu * gradient)
-    #     self.update_gradient_ascent_speed()
-    #
-    #     yield self.action
-    #     yield True
-
     def step(self, ds) -> float:
+        _, reward0 = ds.data
+
         direction = self.get_direction_randomly()
 
         yield self.action*(1 + direction*self.delta)
         yield True
 
-        _, reward0 = ds.data
-
-        yield self.action*(1 - direction*self.delta)
-        yield True
-
         _, reward1 = ds.data
 
-        gradient = direction * (reward0 - reward1) / (2*self.action*self.delta)
+        gradient = direction * (reward1 - reward0) / (self.action * self.delta)
 
         self.set_action(self.action + self.mu * gradient)
         self.update_gradient_ascent_speed()
+
+        yield self.action
+        yield True

@@ -1,0 +1,8 @@
+#!/bin/sh
+cd ../
+
+source thesis_sed/bin/activate
+
+cd src/gym
+
+python test_vis_multiple.py "${@:1}"

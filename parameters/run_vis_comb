@@ -1,0 +1,2 @@
+#!/bin/sh
+srun -c1 --mem=1g --time=2-0 --mpi=pmix vis_comb "${@:1}"

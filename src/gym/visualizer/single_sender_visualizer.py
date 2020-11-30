@@ -37,7 +37,7 @@ class SingleSenderVisualizer(Visualizer):
         info = info[i]
         data = self.data[i]
 
-        data["times"] += [event["Time"] for event in info["Events"]]
+        data["times"] += [event["RealTime"] for event in info["Events"]]
         data["send"] += [event["Send Rate"] for event in info["Events"]]
         data["throu"] += [event["Throughput"] for event in info["Events"]]
         data["optim"] += [8 * event["Optimal"] for event in info["Events"]]

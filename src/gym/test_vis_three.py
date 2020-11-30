@@ -17,12 +17,14 @@ import inspect
 import random
 import matplotlib.pyplot as plt
 
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0,pparentdir)
 
 from src.gym.parameter_readme import create_readmefile
+from src.gym.parameter_extractor import extract_parameters
 
 from src.common.simple_arg_parse import arg_or_default
 
@@ -40,34 +42,20 @@ NUMBER_OF_EPOCHES = 1
 TIMES = 15000
 bws = [600]
 
-OUTPUT = arg_or_default("--output", default=None)
+params = extract_parameters()
 
-comb_lr = arg_or_default("--comb_lr", default=200)
-comb_lower_lr = arg_or_default("--comb_lower_lr", default=0) == 1
-comb_min_proba = arg_or_default("--comb_min_proba", default=0.1)
-
-twop_lr = arg_or_default("--twop_lr", default=5000)
-twop_lower_lr = arg_or_default("--twop_lower_lr", default=0) == 1
-twop_delta = arg_or_default("--twop_delta", default=0.01)
-
-comb_kwargs = {
-    'lr': comb_lr,
-    'lower_lr': comb_lower_lr,
-    'min_proba_thresh': comb_min_proba
-}
-
-two_point_kwargs = {
-    'lr': twop_lr,
-    'lower_lr': twop_lower_lr,
-    'delta': twop_delta
-}
+comb_kwargs = params["comb_kwargs"]
+two_point_kwargs = params["two_point_kwargs"]
+OUTPUT = params["output"]
+offset = params["offset"]
 
 #  Fix race cond bug
-# import matplotlib
-# matplotlib.use('Agg')
+if params["concurrent"] == 1:
+    import matplotlib
+    matplotlib.use('Agg')
 
 
-create_readmefile(comb_kwargs, two_point_kwargs, OUTPUT)
+create_readmefile(params)
 
 for i in range(NUMBER_OF_EPOCHES):
     env = get_env(bws, 3, "loss")

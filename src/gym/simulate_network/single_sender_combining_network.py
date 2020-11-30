@@ -23,7 +23,7 @@ class SingleSenderCombiningNetwork(SingleSenderNetwork):
             yield links
 
     def get_next_ogd_proba(self):
-        return random.uniform(0.1, 0.9)
+        return random.uniform(0, 0.3)
 
     def __init__(self, two_point_kwargs, reward, output='.'):
         super().__init__(self.generate_next_network(), reward=reward, output=output)

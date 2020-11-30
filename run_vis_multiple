@@ -1,0 +1,2 @@
+#!/bin/sh
+srun -c4 --mem=1g --time=2-0 --mpi=pmix vis_multiple

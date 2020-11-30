@@ -21,6 +21,7 @@ from stable_baselines import PPO1
 import os
 import sys
 import inspect
+import re
 
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -47,7 +48,19 @@ env = SingleSenderCombiningNetwork({
 print("gamma = %f" % gamma)
 model = PPO1(SimpleMlpPolicy, env, verbose=1, schedule='constant', timesteps_per_actorbatch=8192, optim_batchsize=2048, gamma=gamma)
 
-for i in range(0, 20):
+start_point = 0
+for file in os.listdir(output):
+    x = re.findall("^pcc_model_(\d+).zip$", file)
+
+    if len(x) == 0:
+        continue
+
+    start_point = max(start_point, int(x[0]))
+
+if start_point != 0:
+    model = PPO1.load(output + "/pcc_model_%d.zip" % (start_point - 1), env)
+
+for i in range(start_point, 40):
     model.learn(total_timesteps=(1600 * 410))
     model.save(output + "/pcc_model_%d.zip" % i)
 

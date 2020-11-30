@@ -4,22 +4,37 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-multiple_3000_0.1_5000_0.02.csv")
+result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-combined2_37_aurora_specific5.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
 #                                      "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "file_name"]
 
 result["totalPredF"] = result["sig1F"] + result["sig2F"]
 result["totalPred"] = result["sig1"] + result["sig2"]
-result["diffRate"] = result["diffRate"].abs()
+result["diffRate"] = result["diffRate"].abs() / (8e6)
+result["absDiffRate"] = result["absDiffRate"] / (8e6)
 result["totalDiff"] = result["absDiffRate"] + result["diffRate"]
 
 result["totalEwma"] = result["ewma1Final"] + result["ewma2Final"]
 
+result["diffSend"] = (result["avgRate1"] - result["avgRate2"]).abs() / (8e6)
+result["diffThrou"] = (result["avgThrou1"] - result["avgThrou2"]).abs() / (8e6)
+
 result.plot.scatter(x='totalPred', y='totalEwma')
 plt.show()
 
-result["diffRate"].plot.kde()
+result.plot.scatter(x='totalPred', y='diffThrou')
+plt.show()
+
+plt.title("absDiffRate")
+plt.xlabel("Delta rate [MB/s]")
+result["absDiffRate"].plot.kde()
+plt.xlim([-0.2, 1])
+plt.show()
+
+plt.title("diffThrou")
+plt.xlabel("Delta rate [MB/s]")
+result["diffThrou"].plot.kde()
 plt.show()
 
 for i in range(1000):
@@ -59,9 +74,6 @@ absDiffRate = result.sort_values('absDiffRate', ascending=True)
 i = 0
 
 for index, row in absDiffRate.iterrows():
-    if row["absDiffRate"] <= 2*10**10:
-        continue
-
     print('%.2E' % row["absDiffRate"])
     if 0 <= i:
         f = row['file_name'][:-5] + '.png'

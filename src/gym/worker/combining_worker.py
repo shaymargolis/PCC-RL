@@ -1,5 +1,7 @@
 import math
 import numpy as np
+
+from src.gym.worker.reward_calculator.reward_calculator import RewardCalculator, AverageRewardCalculator
 from src.gym.worker.worker import Worker
 
 
@@ -11,7 +13,7 @@ def exp_normalize(x):
 
 
 class CombiningWorker(Worker):
-    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.1, lr=500, lower_lr=False, sender_idx=0, debug=False):
+    def __init__(self, action_limits, env, workers: list, min_proba_thresh=0.1, lr=500, lower_lr=False, sender_idx=0, debug=False, const_proba=None, reward_calculator: RewardCalculator=None):
         super().__init__(env, action_limits)
 
         self.workers = workers
@@ -26,6 +28,8 @@ class CombiningWorker(Worker):
 
         self.sender_idx = sender_idx
         self.debug = debug
+        self.const_proba = const_proba
+        self.reward_calculator = reward_calculator if reward_calculator else AverageRewardCalculator()
 
         self.N = 2
 
@@ -62,6 +66,9 @@ class CombiningWorker(Worker):
     def get_proba(self):
         # return [Aurora, OGD]
         # return [1, 0]
+        if self.const_proba:
+            return self.const_proba
+
         return self.proba
 
     def update_weights(self, chosen_index: int, proba: float, reward: float):
@@ -80,30 +87,7 @@ class CombiningWorker(Worker):
         ind = np.random.choice(self.N, 1, p=self.get_proba())[0]
 
         #  Run the selected worker
-        gen = self.workers[ind].step(ds)
-        reward = 0
-        reward_steps = 0
-
-        while True:
-            try:
-                action = next(gen)
-            except StopIteration as ex:
-                break
-
-            yield action
-            yield True
-
-            reward += ds.data[1]
-            reward_steps += 1
-
-            #  Continue to next action
-            next(gen)
-
-        if reward_steps == 0:
-            print("[ERROR] Worker's number of steps must be atleast 1.")
-            return
-
-        reward = reward / reward_steps
+        reward = yield from self.reward_calculator(ds, self.workers[ind])
 
         self._debugPrint("[Combining %d] worker %d rewarded %.2f [%.2f, %.2f]" % (self.sender_idx, ind, reward, self.weights[0], self.weights[1]))
 

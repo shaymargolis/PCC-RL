@@ -44,6 +44,7 @@ class Sender:
         self.reward_ewma = 0
         self.last_latency = [0]
         self.reward = reward
+        self.real_time = 0
 
         self.cwnd = cwnd
 
@@ -198,6 +199,8 @@ class Sender:
         :return: New run dur
         """
 
+        self.real_time += run_dur
+
         reward, latency_grad = self.get_reward()
 
         sender_mi = self.get_run_data()
@@ -206,6 +209,7 @@ class Sender:
         event["Name"] = "Step"
         event["EWMA"] = self.reward_ewma
         event["Time"] = steps_taken
+        event["RealTime"] = self.real_time
         event["Reward"] = reward
         event["Optimal"] = BYTES_PER_PACKET * np.min([link.bw for link in self.path])
         # event["Target Rate"] = sender_mi.target_rate

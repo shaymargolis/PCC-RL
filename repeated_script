@@ -1,0 +1,6 @@
+#!/bin/sh
+source thesis_sed/bin/activate
+
+cd src/gym
+
+python train_cyclic_stable.py --output="/cs/labs/schapiram/shaymar/cyclic_stab"

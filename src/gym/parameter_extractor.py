@@ -4,6 +4,8 @@ from src.common.simple_arg_parse import arg_or_default
 def extract_parameters():
     OUTPUT = arg_or_default("--output", default=None)
 
+    message = arg_or_default("--msg", default=None)
+
     comb_lr = arg_or_default("--comb_lr", default=200)
     comb_lower_lr = arg_or_default("--comb_lower_lr", default=0) == 1
     comb_min_proba = arg_or_default("--comb_min_proba", default=0.1)
@@ -16,10 +18,22 @@ def extract_parameters():
 
     reward_type = arg_or_default("--reward", default="loss")
 
+    concurrent = arg_or_default("--concurrent", default=0)
+    aurora_agent = arg_or_default("--aurora", default="rand_model_12")
+
+    ogd_worker = arg_or_default("--ogd", default="two_point")
+
+    agent_reward = arg_or_default("--agent_reward", default="average")
+
+    const_proba = arg_or_default("--const_proba", default=None)
+    if const_proba:
+        const_proba = list(map(float, const_proba.split(",")[:2]))
+
     comb_kwargs = {
         'lr': comb_lr,
         'lower_lr': comb_lower_lr,
-        'min_proba_thresh': comb_min_proba
+        'min_proba_thresh': comb_min_proba,
+        'const_proba': const_proba
     }
 
     two_point_kwargs = {
@@ -29,6 +43,11 @@ def extract_parameters():
     }
 
     return {
+        'ogd_worker': ogd_worker,
+        'aurora_agent': aurora_agent,
+        'agent_reward': agent_reward,
+        'concurrent': concurrent,
+        'message': message,
         'output': OUTPUT,
         'offset': offset,
         'comb_kwargs': comb_kwargs,

@@ -1,0 +1,10 @@
+#!/bin/sh
+cd ../
+
+source thesis_sed/bin/activate
+
+cd src/gym
+
+mkdir $1
+
+python test_vis_comb.py "${@:1}"

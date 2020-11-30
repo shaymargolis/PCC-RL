@@ -1,0 +1,31 @@
+#!/bin/sh
+
+OUTPUT="/cs/labs/schapiram/shaymar/parameter_tests/pls_sign/reg_aurora"
+
+#declare -a LrOptions=(5 15 200 1000 5000 15000 25000)
+#declare -a LowerLrOptions=(0 1)
+#declare -a DeltaOptions=(0.01 0.005 0.02 0.1)
+#declare -a MinProbaOptions=(0.01 0.001 0.1 0.2)
+
+declare -a LrOptions=(5000 25000 100000 1000000)
+declare -a LowerLrOptions=(0)
+declare -a DeltaOptions=(0.04 0.02 0.01)
+declare -a MinProbaOptions=(0.01 0.0001 0.1 0.002)
+
+out=""
+
+for combLr in ${LrOptions[@]}; do
+for combLowerLr in ${LowerLrOptions[@]}; do
+for combMinProba in ${MinProbaOptions[@]}; do
+for twopLr in ${LrOptions[@]}; do
+for twopLowerLr in ${LowerLrOptions[@]}; do
+for twopDelta in ${DeltaOptions[@]}; do
+  out=$OUTPUT/$combLr-$combLowerLr-$combMinProba--$twopLr-$twopLowerLr-$twopDelta
+  mkdir $out
+  sbatch -c1 --mem=1g --time=200 run_vis_multiple "${@:1}" --concurrent=1 --output=$out --comb_lr=$combLr --comb_lower_lr=$combLowerLr --comb_min_proba=$combMinProba --twop_lr=$twopLr --twop_lower_lr=$twopLowerLr --twop_delta=$twopDelta --offset=0
+done
+done
+done
+done
+done
+done
