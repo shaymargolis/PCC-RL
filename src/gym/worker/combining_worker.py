@@ -67,7 +67,10 @@ class CombiningWorker(Worker):
         # return [Aurora, OGD]
         # return [1, 0]
         if self.const_proba:
-            return self.const_proba
+            if len(self.const_proba) == 1:
+                return self.const_proba[0]
+
+            return self.const_proba[self.sender_idx]
 
         return self.proba
 

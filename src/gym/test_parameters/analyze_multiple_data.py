@@ -4,7 +4,13 @@ import matplotlib.image as mpimg
 from scipy.stats import kde
 import numpy as np
 
-result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-combined2_37_aurora_specific5.csv")
+DISABLE_SCIVIEW = False
+
+if DISABLE_SCIVIEW:
+    import matplotlib
+    matplotlib.use('TkAgg')
+
+result = pd.read_csv("/cs/labs/schapiram/shaymar/out-fixed-only_aurora_specific5.csv")
 
 # result.columns = ["idx", "combLr", "combLowerLr", "combMinProba", "twopLr", "twopLowerLr", "twopDelta",
 #                                      "diffEwma", "absDiffEwma", "diffRate", "absDiffRate", "sig1", "sig2", "file_name"]
@@ -61,11 +67,11 @@ def plot_2d_kde(x, y, xlabel="x", ylabel="y", title="2d kde"):
     plt.title(title)
     plt.show()
 
-plot_2d_kde(result["sig1"], result["sig2"],
-            xlabel='Sender 1 Sig',
-            ylabel='Sender 2 Sig',
-            title='Probability Density of OGD Significance (1 = Most significant)')
-plt.show()
+# plot_2d_kde(result["sig1"], result["sig2"],
+#             xlabel='Sender 1 Sig',
+#             ylabel='Sender 2 Sig',
+#             title='Probability Density of OGD Significance (1 = Most significant)')
+# plt.show()
 
 #  NOT USING LOWER_LR
 print("diffRate")

@@ -79,7 +79,7 @@ class MultipleSenderVisualizer(Visualizer):
         for i in range(len(self.workers)):
             data = self.data[i]
 
-            axis.plot(data["times"], data["send"], colors[i][0] + "-", label="[%d] Sent" % (i + 1))
+            axis.plot(data["times"], data["send"], colors[i][0] + "-", label="[%d] Sent" % (i + 1), alpha=0.7)
 
         axis.plot(data["times"], data["optim"], "b--", label="Optimal")
         axis.plot(data["times"], np.array(data["optim"]) / 2, "r--", label="Optimal/2")

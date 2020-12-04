@@ -26,8 +26,12 @@ def extract_parameters():
     agent_reward = arg_or_default("--agent_reward", default="average")
 
     const_proba = arg_or_default("--const_proba", default=None)
+
+    def get_proba(string):
+        return list(map(float, string.split(",")[:2]))
+
     if const_proba:
-        const_proba = list(map(float, const_proba.split(",")[:2]))
+        const_proba = list(map(get_proba, const_proba.split(":")))
 
     comb_kwargs = {
         'lr': comb_lr,

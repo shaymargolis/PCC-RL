@@ -102,7 +102,7 @@ def analyze_dir(dir_path):
     analyze_dir_with_params(dir_path, dir_params)
 
 # FILE_NAME = "combinde2_aurora_last_occurrence2"
-FILE_NAME = "combined2_37_aurora_specific5"
+FILE_NAME = "only_aurora_specific5"
 
 # for dir_name in tqdm.tqdm(os.listdir(INPUT_DIR + "/" + FILE_NAME)):
 #     analyze_dir(FILE_NAME + "/" + dir_name)

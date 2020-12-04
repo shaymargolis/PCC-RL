@@ -62,30 +62,45 @@ for i in range(NUMBER_OF_EPOCHES):
     print("ENV", env)
 
     model = CombiningWorker(
-        (80, 400),
+        (80, 450),
         env,
         [
-            AuroraWorker("./" + params["aurora_agent"], env, (80, 400)),
-            get_ogd_worker(params["ogd_worker"], env, (80, 400), C=11 * 400, L=20, sender_id=0, **two_point_kwargs)
+            AuroraWorker("./" + params["aurora_agent"], env, (80, 450)),
+            get_ogd_worker(params["ogd_worker"], env, (80, 450), C=11 * 450, L=20, sender_id=0, **two_point_kwargs)
         ],
         reward_calculator=get_agent_reward_calculator(params["agent_reward"]),
+        sender_idx=0,
         **comb_kwargs
     )
 
     model2 = CombiningWorker(
-        (80, 400),
+        (80, 450),
         env,
         [
-            AuroraWorker("./" + params["aurora_agent"], env, (80, 400)),
-            get_ogd_worker(params["ogd_worker"], env, (80, 400), C=11 * 400, L=20, sender_id=1, **two_point_kwargs)
+            AuroraWorker("./" + params["aurora_agent"], env, (80, 450)),
+            get_ogd_worker(params["ogd_worker"], env, (80, 450), C=11 * 400, L=20, sender_id=1, **two_point_kwargs)
         ],
         reward_calculator=get_agent_reward_calculator(params["agent_reward"]),
+        sender_idx=1,
         **comb_kwargs
     )
 
     start1 = random.uniform(40, 300)
     start2 = random.uniform(40, 300)
 
+    # start1 = 120
+    # start2 = 340
+    #
+    # #  OGD
+    # model.weights[0] = 5000
+    # model.weights[1] = 0
+    # model.calculate_proba()
+    #
+    # #  Aurora
+    # model2.weights[0] = 5000
+    # model2.weights[1] = 0
+    # model2.calculate_proba()
+    #
     model.set_action(start1)
     model2.set_action(start2)
 
