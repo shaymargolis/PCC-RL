@@ -169,5 +169,10 @@ def get_rate(flow_id):
     driver = PccGymDriver.get_by_flow_id(flow_id)
     return driver.get_rate()
 
+def set_rate(flow_id, rate):
+    driver = PccGymDriver.get_by_flow_id(flow_id)
+
+    driver.set_current_rate(rate / 1e6)
+
 def init(flow_id):
     driver = PccGymDriver(flow_id)
