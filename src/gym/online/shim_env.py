@@ -59,14 +59,15 @@ class ShimNetworkEnv(gym.Env):
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setblocking(1)
-        self.sock.bind(("localhost", 9787))
+        self.sock.bind(("127.0.0.1", 9787))
+        
+        self.should_reset = False
 
         self.conn = None
         self.conn_addr = None
         self.features = features.split(",")
         self.history_len = history_len
         self.history = sender_obs.SenderHistory(history_len, self.features, 0)
-        self.rate = STARTING_RATE
 
         single_obs_min_vec = sender_obs.get_min_obs_vector(self.features)
         single_obs_max_vec = sender_obs.get_max_obs_vector(self.features)
@@ -79,22 +80,6 @@ class ShimNetworkEnv(gym.Env):
         self.reward_sum = 0.0
         self.reward_ewma = 0.0
 
-    def apply_action(self, action):
-        delta = action * DELTA_SCALE
-        #print("Applying delta %f" % delta)
-        if delta >= 0.0:
-            self.set_rate(self.rate * (1.0 + delta))
-        else:
-            self.set_rate(self.rate / (1.0 - delta))
-
-    def set_rate(self, new_rate):
-        self.rate = new_rate
-        #print("Attempt to set new rate to %f (min %f, max %f)" % (new_rate, MIN_RATE, MAX_RATE))
-        if self.rate > MAX_RATE:
-            self.rate = MAX_RATE
-        if self.rate < MIN_RATE:
-            self.rate = MIN_RATE
-
     def seed(self, seed=None):
         self.rand, seed = seeding.np_random(seed)
         return [seed]
@@ -104,8 +89,13 @@ class ShimNetworkEnv(gym.Env):
             print("Listening for connection from network sender")
             self.sock.listen()
             self.conn, self.addr = self.sock.accept()
-        self.apply_action(action[0])
-        self.conn.send(str(self.rate).encode())
+        
+        if self.should_reset:
+            self.conn.send("RESET".encode())
+            self.should_reset = False
+        else:
+            self.conn.send(str(action[0]).encode())
+        
         data = self.conn.recv(1024).decode()
         data = data.split("\n")[-2]
         vals = data.split(";")
@@ -145,7 +135,9 @@ class ShimNetworkEnv(gym.Env):
         print("Reward: %0.2f, Ewma Reward: %0.2f" % (self.reward_sum, self.reward_ewma))
         self.reward_sum = 0.0
         self.steps_taken = 0
-        self.set_rate(STARTING_RATE)
+        
+        self.should_reset = True
+        
         return self.history.as_array()
 
     def render(self, mode='human'):
